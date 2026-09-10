@@ -147,6 +147,31 @@ function findCompanyInText(text) {
   for (const alias of Object.keys(KNOWN_LABELS)) if (t.includes(" " + alias + " ")) hits.push(KNOWN_LABELS[alias]);
   return hits;
 }
+/* ---- MADE-IN / COUNTRY OF ORIGIN reading (label text, OCR, GS1 free text) ---- */
+const COUNTRY_ALIAS = {
+  "USA": "United States", "US": "United States", "U.S.A.": "United States", "UNITED STATES OF AMERICA": "United States",
+  "UK": "United Kingdom", "U.K.": "United Kingdom", "GB": "United Kingdom", "GREAT BRITAIN": "United Kingdom", "ENGLAND": "United Kingdom",
+  "RSA": "South Africa", "Z.A": "South Africa", "ZA": "South Africa",
+  "UAE": "United Arab Emirates", "PRC": "China", "P.R.C.": "China", "P.R.C": "China", "PEOPLES REPUBLIC OF CHINA": "China",
+  "VIET NAM": "Vietnam", "S.KOREA": "South Korea", "SOUTH KOREA": "South Korea", "NORTH KOREA": "North Korea",
+  "CZECH REPUBLIC": "Czech Republic", "COTE D IVOIRE": "Côte d'Ivoire", "HONG KONG": "Hong Kong", "HONG KONG SAR": "Hong Kong"
+};
+function findMadeIn(text) {
+  let u = String(text || "").toUpperCase().replace(/\s+/g, " ").replace(/\.(?!\s)/g, ". ").replace(/\s+/g, " ");
+  const m = u.match(/(?:MADE IN|MANUFACTURED IN|M[FR][A-Z]?\.?\s+IN|PRODUCED IN|BUILT IN|COUNTRY OF ORIGIN\s*[:=]|ORIGIN\s*[:=]\s*|PRODUCT OF)\s+([A-Z][A-Z0-9\s.'-]{1,45})/);
+  if (!m) return null;
+  let raw = m[1].trim();
+  const STOP = /(?:BATCH|LOT\b|EXP(?:IRY)?\b|BEST\b|BEFORE\b|SERIAL\b|SN\b|DATE\b|QTY\b|NET\b|EAN\b|GTIN\b|UPC\b|MFR\b|MFG\b|RF\b|LLC\b|LTD\b|PTY\b|PVT\b|CO\b|INC\b|CORP\b|DISTRIBUTED|IMPORTED|PACKED|BY\b|KEEP\b|NET\s|WEIGHT\b|VOL\b|ML\b|G\b|KG\b)/;
+  const sm = raw.match(STOP);
+  if (sm && sm.index > 0) raw = raw.slice(0, sm.index);
+  raw = raw.replace(/[.\s-]+$/, "").trim();
+  if (raw.length < 2 || raw.length > 28) return null;
+  const fixed = COUNTRY_ALIAS[raw] || COUNTRY_ALIAS[raw.replace(/\s+/g, " ")] || COUNTRY_ALIAS[raw.replace(/\./g, "")] || null;
+  if (fixed) return { country: fixed, label: raw };
+  const words = raw.replace(/\./g, " ").trim().split(/\s+/);
+  const capped = words.map((w) => w === "SAINT" ? "Saint" : w.length <= 2 ? w + "" : w.charAt(0) + w.slice(1).toLowerCase()).join(" ");
+  return { country: capped, label: raw };
+}
 const COMPANY_GTIN = { "8901234": "sample-harlingen", "40012345": "sample-bavaria" };
 const COMPANY_SAMPLES = {
   "sample-harlingen": { key: "sample-harlingen", name: "Harlingen Aero Components", short: "HAC", country: "India", focus: ["Aero components"], verified: false, trust: 3.1, sample: true },
@@ -168,11 +193,17 @@ function companyIntelligence(raw, part, codeInfo) {
   if (fromText.length) return { how: "LABEL-DECLARED", company: fromText[0], conf: 95, prefix: null };
   const pl = codeInfo && codeInfo.payload;
   const gtin = pl && (pl["01"] || pl.gtin);
+  /* MADE IN read off the label / OCR / GS1 free text (AI 96, 240, 703, QR-JSON fields) */
+  const extraText = [pl && pl["96"], pl && pl["240"], pl && pl["703"], pl && (pl.origin || pl.country || pl.madeIn)].filter(Boolean).join(" ") || "";
+  const madeIn = findMadeIn(raw) || findMadeIn(extraText);
   if (gtin) {
     const g = gtinCompany(gtin);
-    if (g) return { how: "GS1-COMPANY-PREFIX", company: g.company, prefix: g.prefix, conf: g.conf, sample: true };
-    return { how: "ORIGIN-ONLY", origin: gtinRegion(String(gtin).replace(/^0(?=\d{13}$)/, "").slice(0, 3)), conf: 55, gtin: String(gtin) };
+    if (g) return { how: "GS1-COMPANY-PREFIX", company: g.company, prefix: g.prefix, conf: g.conf, sample: true, madeIn: madeIn && madeIn.country };
+    const region = gtinRegion(String(gtin).replace(/^0(?=\d{13}$)/, "").slice(0, 3));
+    if (madeIn) return { how: "MADE-IN", origin: madeIn.country, conf: 82, gtin: String(gtin), gs1Region: region, madeInLabel: madeIn.label, madeIn: madeIn.country };
+    return { how: "ORIGIN-ONLY", origin: region, conf: 55, gtin: String(gtin), gs1Region: region };
   }
+  if (madeIn) return { how: "MADE-IN", origin: madeIn.country, conf: 82, madeInLabel: madeIn.label, madeIn: madeIn.country };
   return null;
 }
 /* ============ UNSCANNED-CODE RESOLUTION INDEX ============ */
@@ -1086,10 +1117,18 @@ function companyCard(co) {
       <div class="co-foot"><span>assurance <b>${co.conf}%</b></span><span class="co-stars">${stars} ${c.trust.toFixed(1)}</span><span class="pn">${esc(c.ref || co.how + ":" + c.key)}</span></div>
     </div>`;
   }
-  /* origin-only trace for unknown external codes */
+  /* origin-only / made-in trace for unknown external codes */
+  const region = co.gs1Region || co.origin;
+  const regionNote = region === "South Africa"
+    ? `<div style="font-size:11px;color:var(--dim);margin-top:8px">GS1 prefix <span class="pn">60XX</span> is a <b>regional registration office</b>, not a factory. Prefixes 600/601 are issued by <b>GS1 South Africa</b> to companies across <b>South Africa, Zimbabwe and Namibia</b> — so the actual factory country must come from the label.</div>`
+    : "";
   return `<div class="co-card co-origin">
-    <div class="co-head">🛰️ ORIGIN TRACE <span>// AI</span></div>
-    <div style="font-size:12.5px;line-height:1.6;padding:12px">Barcode <b>read successfully</b> — retail / global trade item, origin traced to <b>${esc(co.origin)}</b>${co.gtin ? ` (GS1 prefix <span class="pn">${esc(co.gtin.replace(/^0(?=\d{13}$)/, "").slice(0, 3))}…</span>)` : ""}. Maker not in local registry — hold the label to the camera (Super Scan AI) or scan a GS1 / QR-JSON payload to identify the company.</div>
+    <div class="co-head">${co.madeIn ? "🏭 MANUFACTURED IN" : "🛰️ ORIGIN TRACE"} <span>// AI</span></div>
+    <div style="font-size:12.5px;line-height:1.6;padding:12px">${co.madeIn
+      ? `Label declares <b>MADE IN ${esc(co.madeIn)}</b>${co.madeInLabel ? ` (<span class="pn">${esc(co.madeInLabel)}</span> on label)` : ""} — read from the label text by AI, not assumed from the prefix.${co.gs1Region ? ` GS1 office: ${esc(co.gs1Region)}.` : ""}`
+      : `Barcode registered in the <b>${esc(region)}</b> GS1 region${co.gtin ? ` (GS1 prefix <span class="pn">${esc(co.gtin.replace(/^0(?=\d{13}$)/, "").slice(0, 3))}…</span>)` : ""}. This is the region where the GTIN was issued — not necessarily the factory. Use <b>Super Scan AI</b> (or a QR-JSON / GS1 label) so the model can read the actual <b>MADE IN</b> country off the label.`}
+    ${regionNote}
+    </div>
   </div>`;
 }
 function companySheet(co) {
