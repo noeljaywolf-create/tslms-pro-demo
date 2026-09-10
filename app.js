@@ -596,6 +596,7 @@ function openScanner() {
           <div class="scanner-tabs">
             <button class="btn btn-sm" id="tabAuto">&#10052; Smart Auto</button>
             <button class="btn btn-sm" id="tabOcr">&#128451; AI OCR</button>
+            <button class="btn btn-sm" id="tabSuper">&#129302; Super Scan AI</button>
             <button class="btn btn-sm" id="tabMan">&#128221; Manual</button>
           </div>
           <div id="scannerPane">
@@ -613,6 +614,7 @@ function openScanner() {
     </div>`;
   $("tabAuto").addEventListener("click", () => setScanMode("auto"));
   $("tabOcr").addEventListener("click", () => setScanMode("ocr"));
+  $("tabSuper").addEventListener("click", () => setScanMode("super"));
   $("tabMan").addEventListener("click", () => setScanMode("man"));
   setScanMode("auto");
 }
@@ -645,6 +647,24 @@ function setScanMode(mode) {
       $("snapBtn").addEventListener("click", snapshotOcr);
       startScanner();
     }
+  } else if (mode === "super") {
+    $("tabSuper").classList.add("btn-accent");
+    $("scannerPane").classList.remove("hidden");
+    $("scanManual").classList.add("hidden");
+    const hasOcr = typeof Tesseract !== "undefined";
+    $("scanResult").innerHTML = "";
+    superStateReset();
+    $("scannerPane").innerHTML = `<div id="qrRegion" class="qr-region"><div class="empty" style="padding:70px 20px"><div class="e-ic">&#129302;</div>Starting camera + AI vision…</div></div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
+        <span class="ocr-status pulse" id="superStatus">${hasOcr ? "AI listening — decoder + OCR fusion active…" : "OCR engine missing — barcode-decoder only"}</span>
+      </div>
+      <div class="scanner-help">Super Scan AI runs the barcode decoder <b>and</b> grabs OCR snapshots from the same camera feed until a confident match &mdash; then shows both channels as evidence. ${hasOcr ? "" : " (load OCR via the AI OCR tab first)"}</div>`;
+    startScanner();
+    if (hasOcr) {
+      clearInterval(superTimer);
+      superTimer = setInterval(superOcrLoop, 4500);
+      setTimeout(superOcrLoop, 1500);
+    }
   } else {
     $("tabMan").classList.add("btn-accent");
     $("scannerPane").classList.add("hidden");
@@ -664,7 +684,7 @@ function startScanner(cb) {
       { facingMode: "environment" },
       { fps: 10, qrbox: aiMode === "ocr" ? { width: 300, height: 220 } : { width: 240, height: 200 } },
       (decoded, decodedResult) => {
-        if (aiMode === "auto") handleScanCode(decoded, decodedResult);
+        if (aiMode === "auto" || aiMode === "super") handleScanCode(decoded, decodedResult);
       },
       () => {}
     ).catch(() => showScanMsg("Camera unavailable — use Manual entry instead.", true));
@@ -674,6 +694,7 @@ function startScanner(cb) {
 }
 
 function stopScanner() {
+  clearInterval(superTimer); superTimer = null;
   if (scanner) {
     try { scanner.stop().then(() => scanner.clear()).catch(() => {}); } catch (e) {}
     scanner = null;
@@ -879,7 +900,17 @@ function actRegister(pnVal) {
 }
 
 /* ---------- Barcode / QR handling ---------- */
+let superTimer = null;
+let superOcrBusy = false;
+let superBest = null;
+let superBarcodePick = null;
+let superOcrPick = null;
+function superStateReset() {
+  clearInterval(superTimer); superTimer = null;
+  superBest = superBarcodePick = superOcrPick = null; superOcrBusy = false;
+}
 function handleScanCode(decoded, decodedResult) {
+  if (aiMode === "super") { superAccum("barcode", decoded, decodedResult); return; }
   if (!scanner) return;
   stopScanner();
   const f = decodedResult && decodedResult.result && decodedResult.result.format && (decodedResult.result.format.format || decodedResult.result.format.toString());
@@ -888,6 +919,69 @@ function handleScanCode(decoded, decodedResult) {
   $("scanResult").innerHTML = `<div class="scan-kicker"><span class="tag info">SMART AUTO</span> decoded <span class="pn">${esc(decoded)}</span></div>` + renderAnalysis(a, meta);
   if (a.status === "exact") toast("ok", "Scan matched", decoded + " → " + a.part.pn);
   else if (a.status === "none") toast("warn", "No exact match", "Showing closest parts & actions.");
+}
+
+/* ----- Super Scan AI: decoder + OCR fusion ----- */
+function superAccum(src, decoded, decodedResult) {
+  const f = decodedResult && decodedResult.result && decodedResult.result.format && (decodedResult.result.format.format || decodedResult.result.format.toString());
+  const a = analyzeCode(decoded, { src, format: src === "barcode" ? (f || undefined) : "OCR" });
+  const conf = a.status === "exact" ? 100 : (a.part ? a.confidence : 0);
+  const pick = { a, src, raw: decoded, f, conf };
+  if (src === "barcode") superBarcodePick = pick;
+  if (src === "ocr") superOcrPick = pick;
+  if (!superBest || conf > superBest.conf) superBest = pick;
+  const st = $("superStatus");
+  if (st) {
+    if (a.part) st.innerHTML = `<span class="tag ${a.status === "exact" ? "ok" : "warnb"}">${a.status === "exact" ? "MATCH" : "CANDIDATE " + conf + "%"}</span> ${esc(a.part.pn)} — ${esc(a.part.name)} <span style="opacity:.6">via ${src === "barcode" ? "decoder" : "OCR"}</span>`;
+    else if (a.codeInfo) st.innerHTML = `<span class="tag violet">CODE READ</span> ${esc(String(decoded).slice(0, 30))}`;
+    else st.innerHTML = `<span class="tag neutral">SCANNING</span> reading … ${esc(String(decoded).slice(0, 24))}`;
+  }
+  /* finalize: confident match, or any fully-decoded code report */
+  const hasRealInfo = a.codeInfo && a.codeInfo.kind !== "Barcode / QR text";
+  if (a.status === "exact" || hasRealInfo || conf >= 82) return superFinalize(a, src, decoded, f);
+  const r = $("scanResult");
+  if (r && superBest) r.innerHTML = superPreview(superBest);
+  return null;
+}
+function superPreview(pick) {
+  return `<div class="scan-kicker"><span class="tag violet">SUPER SCAN AI</span> <span style="font-size:12px;color:var(--dim)">${pick.src === "barcode" ? "decoder" : "OCR"} · ${pick.a.status === "exact" ? "exact" : pick.conf + "%"} · best so far — camera listening</span></div>` +
+    (pick.a.part ? renderAnalysis(pick.a) : `<div class="empty" style="padding:14px">No confident match yet… <b>${esc(pick.raw.slice(0, 32))}</b></div>`);
+}
+function superEvidence() {
+  const row = (label, p, cls) => p ? `<div class="scan-ev"><span class="tag ${cls}">${label}</span> <span class="pn">${esc(p.raw)}</span>${p.a.part ? ` <span class="tag ${p.a.status === "exact" ? "ok" : "warnb"}">${p.a.status === "exact" ? "EXACT" : p.a.confidence + "%"}</span>` : ""}</div>` : "";
+  return `<div class="scan-evidence"><div style="font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.06em">EVIDENCE — FUSED CHANNELS</div>${row("Decoder", superBarcodePick, "info")}${row("OCR", superOcrPick, "violet")}</div>`;
+}
+function superFinalize(a, src, raw, f) {
+  const b = superBarcodePick, o = superOcrPick;
+  superStateReset();
+  stopScanner();
+  const verdict = a.status === "exact" ? "EXACT MATCH" : a.part ? "AI MATCH " + a.confidence + "%" : "CODE DECODED";
+  const row = (label, p, cls) => p ? `<div class="scan-ev"><span class="tag ${cls}">${label}</span> <span class="pn">${esc(p.raw)}</span>${p.a.part ? ` <span class="tag ${p.a.status === "exact" ? "ok" : "warnb"}">${p.a.status === "exact" ? "EXACT" : p.a.confidence + "%"}</span>` : ""}</div>` : "";
+  $("scanResult").innerHTML =
+    `<div class="scan-kicker"><span class="tag violet">SUPER SCAN AI</span> <span class="tag ${a.status === "exact" ? "ok" : a.part ? "warnb" : "neutral"}">${verdict}</span> via ${src === "barcode" ? "blazing decoder" : "OCR snapshot"} &middot; <span class="pn">${esc(String(raw).slice(0, 40))}</span></div>` +
+    `<div class="scan-evidence"><div style="font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.06em">EVIDENCE — FUSED CHANNELS</div>${row("Decoder", b, "info")}${row("OCR", o, "violet")}</div>` +
+    renderAnalysis(a, { src, format: src === "ocr" ? "OCR" : f });
+  if (a.part) toast(a.status === "exact" ? "ok" : "info", "Super Scan AI", `${a.part.pn} resolved — ${a.status === "exact" ? "exact" : a.confidence + "% confidence"}.`);
+  else toast("warn", "Super Scan AI", "Code decoded — not in local catalogue.");
+}
+async function superOcrLoop() {
+  if (superOcrBusy || scanner === null || aiMode !== "super") return;
+  if (typeof Tesseract === "undefined") return;
+  superOcrBusy = true;
+  const st = $("superStatus");
+  try {
+    const worker = await ocrEnsure();
+    const canvas = captureFrame();
+    if (st) st.textContent = "OCR reading…";
+    const { data } = await worker.recognize(canvas);
+    const text = (data && data.text || "").trim();
+    if (text) superAccum("ocr", text);
+    else if (st) st.textContent = "OCR: nothing readable yet — keep the label in frame";
+  } catch (e) {
+    if (st && aiMode === "super") st.textContent = "OCR: " + e.message;
+  } finally {
+    superOcrBusy = false;
+  }
 }
 
 function manualScan(prefill) {

@@ -18,9 +18,10 @@ Professional, fully-interactive product simulation of an intelligent aviation te
 - **Compliance & Certificates** — shelf-life control, FOD log, legal e-releases (Module 4)
 - **Blockchain Parts Passport** — chain-of-custody viewer (Module 7)
 - **Executive Analytics** — spend, fill-rate, AOG cost-avoidance + CSV export
-- **Intelligent Scanner** — three AI-powered modes:
+- **Intelligent Scanner** — four AI-powered modes:
   - **Smart Auto** — continuous barcode/QR decoding from camera (works over HTTPS on GitHub Pages)
   - **AI OCR** — Tesseract.js reads part numbers, serials and QR text straight off printed labels (no barcode needed), fuzzy-matched to inventory with a confidence score
+  - **Super Scan AI** — fusion mode: the decoder and live Tesseract OCR run on the **same camera feed** until a confident match; results carry a fused **EVIDENCE** block showing both decoder and OCR reads with match confidence
   - **Manual entry** — smart lookup with nearest-part suggestions when no exact match exists
 - **Universal code decoding** — the scanner resolves any scanned/typed code to the exact item, and always tells you what the code itself says:
   - **60+ part catalogue** with a resolution index: part numbers in any layout (`BSC-64-73221`, `BSC6473221`, lowercase), prefixed labels (`PN:…`, `P/N:…`, `BAR:…`, `SERIAL:…`), part names and shorthand aliases (`brake`, `pump`, `hub`…) all resolve to **EXACT 100%** part sheets
