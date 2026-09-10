@@ -79,7 +79,7 @@ tslms-demo/
 
 > **AI note:** the whole intelligence layer is deterministic and offline — forecasts are recomputed live from the seeded demand model, and the assistant's numerical answers are real arithmetic on the current `STORE`, not canned text.
 
-> **Scanning note:** the camera needs a **secure context (HTTPS)**. GitHub Pages is HTTPS, so it works there. The demo always falls back to **manual entry** if the camera is unavailable, and AI OCR still works on `file://` for pasted text via Manual.
+> **Scanning note:** the camera needs a **secure context (HTTPS)**. GitHub Pages is HTTPS, so it works there. The demo always falls back to **manual entry** if the camera is unavailable, and AI OCR still works on `file://` for pasted text via Manual. On phones, open the URL in your **normal browser (Safari or Chrome)** — in-app browsers (WhatsApp, Facebook, Instagram) block camera access. If the camera doesn't start, the scanner now shows the exact reason with a **Retry camera** button and permission guidance.
 
 ## Host on GitHub Pages (free)
 

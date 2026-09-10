@@ -843,10 +843,38 @@ function startScanner(cb) {
         if (aiMode === "auto" || aiMode === "super") handleScanCode(decoded, decodedResult);
       },
       () => {}
-    ).catch(() => showScanMsg("Camera unavailable — use Manual entry instead.", true));
+    ).catch((err) => {
+      scanner = null;
+      showCamError(err);
+    });
   } catch (err) {
-    showScanMsg("Could not start camera: " + err.message, true);
+    scanner = null;
+    showCamError(err);
   }
+}
+
+/* Camera-start diagnostics: real reason + retry/manual fallback */
+function camFriendly(err) {
+  const n = (err && (err.name || (err.error && err.error.name))) || "";
+  const ua = (navigator.userAgent || "");
+  const inapp = /Instagram|FBAN|FBAV|WhatsApp|Line|Messenger|Snapchat/i.test(ua);
+  if (inapp) return "This looks like an <b>in-app browser</b> (e.g. WhatsApp, Facebook or Instagram). These apps block camera websites. Open the site in your phone's normal browser — Safari or Chrome — instead, then tap Scan.";
+  if (n.indexOf("NotAllowed") === 0 || n === "PermissionDeniedError") return "Camera permission is <b>blocked</b>. Tap the &#128274; lock/camera icon next to the address bar &rarr; <b>Camera: Allow</b> (iPhone: Settings &rarr; Safari &rarr; Camera &rarr; Allow; Android: site settings). Then retry.";
+  if (n === "NotFoundError" || n === "DevicesNotFoundError") return "No camera was found on this device. Use <b>Manual entry</b> instead — it works offline too.";
+  if (n === "NotReadableError" || n === "AbortError" || n === "TrackStartError") return "The camera is in use by another app or already running. Close other camera apps and retry.";
+  if (n === "OverconstrainedError") return "No rear camera matched the request. Try Manual entry, or retry once more.";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return "This browser doesn't expose a camera API. Use <b>Manual entry</b>, or try Safari/Chrome on a phone for the camera.";
+  return "Camera could not start" + (err && err.message ? " — <b>[" + err.message + "]</b>" : "") + ". Check permissions and retry, or use Manual entry.";
+}
+
+function showCamError(err) {
+  const pane = $("scannerPane");
+  if (pane) pane.innerHTML = `<div class="empty"><div class="e-ic">&#9888;</div><div style="max-width:330px;font-size:13px;line-height:1.6">${camFriendly(err)}</div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-sm btn-accent" onclick="startScanner()">&#128247; Retry camera</button>
+      <button class="btn btn-sm" onclick="setScanMode('man')">&#128221; Manual entry</button>
+    </div></div>`;
+  toast("warn", "Scanner", "Camera could not start — see message in scanner.");
 }
 
 function stopScanner() {
