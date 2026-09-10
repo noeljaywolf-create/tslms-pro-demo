@@ -857,6 +857,8 @@ function startScanner(cb) {
   if (scanner || typeof Html5Qrcode === "undefined") return;
   const region = $("qrRegion");
   if (!region) return;
+  const Fmts = (typeof Html5QrcodeSupportedFormats !== "undefined") ? Html5QrcodeSupportedFormats : null;
+  const fmtList = Fmts ? [Fmts["QR_CODE"], Fmts["DATA_MATRIX"], Fmts["AZTEC"], Fmts["PDF_417"], Fmts["MAXICODE"], Fmts["CODE_128"], Fmts["CODE_39"], Fmts["CODE_93"], Fmts["CODABAR"], Fmts["ITF"], Fmts["UPC_A"], Fmts["UPC_E"], Fmts["EAN_8"], Fmts["EAN_13"]].filter((x) => x !== undefined) : [];
   try {
     scanner = new Html5Qrcode("qrRegion");
     scanner.start(
@@ -864,7 +866,7 @@ function startScanner(cb) {
       {
         fps: 10,
         qrbox: aiMode === "ocr" ? { width: 300, height: 220 } : { width: 240, height: 200 },
-        formatsToSupport: [Html5Qrcode.SupportedFormats["QR_CODE"], Html5Qrcode.SupportedFormats["DATA_MATRIX"], Html5Qrcode.SupportedFormats["AZTEC"], Html5Qrcode.SupportedFormats["PDF_417"], Html5Qrcode.SupportedFormats["MAXICODE"], Html5Qrcode.SupportedFormats["CODE_128"], Html5Qrcode.SupportedFormats["CODE_39"], Html5Qrcode.SupportedFormats["CODE_93"], Html5Qrcode.SupportedFormats["CODABAR"], Html5Qrcode.SupportedFormats["ITF"], Html5Qrcode.SupportedFormats["UPC_A"], Html5Qrcode.SupportedFormats["UPC_E"], Html5Qrcode.SupportedFormats["EAN_8"], Html5Qrcode.SupportedFormats["EAN_13"]]
+        formatsToSupport: fmtList.length ? fmtList : undefined
       },
       (decoded, decodedResult) => {
         if (aiMode === "auto" || aiMode === "super") handleScanCode(decoded, decodedResult);
