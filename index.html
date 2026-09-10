@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TSLMS Pro &mdash; Aviation Technical Stores Intelligence Platform</title>
+<link rel="stylesheet" href="styles.css?v=5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="vendor/chart.umd.min.js"></script>
+<script src="vendor/html5-qrcode.min.js"></script>
+<script src="vendor/tesseract/tesseract.min.js"></script>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-brand">
+    <div class="login-logo">TSLMS <span>PRO</span></div>
+    <h1>Aviation Technical Stores<br>&amp; Logistics Intelligence</h1>
+    <p>Air Zimbabwe &middot; Industrial-grade stores management. One platform for inventory, airworthiness traceability, AI demand forecasting and AOG response.</p>
+    <div class="login-features">
+      <div><span class="lf-ic">&#9673;</span> Real-time bin-level inventory</div>
+      <div><span class="lf-ic">&#9680;</span> AI predictive demand forecasting</div>
+      <div><span class="lf-ic">&#9632;</span> Blockchain parts passport</div>
+      <div><span class="lf-ic">&#10003;</span> EASA / FAA / CAA compliant records</div>
+    </div>
+    <div class="login-foot">PRO version &middot; interactive product simulation</div>
+  </div>
+
+  <div class="login-panel">
+    <form id="loginForm" class="login-card" novalidate>
+      <h2>Sign in</h2>
+      <p class="login-hint">Use a demo role to explore role-specific workflows.</p>
+
+      <label>Email / Username</label>
+      <input type="text" id="loginUser" autocomplete="off" placeholder="e.g. m.chikumba">
+      <span class="field-err" id="userErr"></span>
+
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
+      <span class="field-err" id="passErr"></span>
+
+      <div class="role-pick">Select demo role</div>
+      <div class="role-grid">
+        <button type="button" class="role-card" data-role="stores" data-user="m.chikumba" data-pass="stores123">
+          <div class="role-name">Stores Controller</div>
+          <div class="role-desc">Inventory, bins, AOG response</div>
+        </button>
+        <button type="button" class="role-card" data-role="engineer" data-user="t.ndlovu" data-pass="eng123">
+          <div class="role-name">Maintenance Engineer</div>
+          <div class="role-desc">Requisitions, forecasts, installs</div>
+        </button>
+        <button type="button" class="role-card" data-role="inspector" data-user="k.moyo" data-pass="insp123">
+          <div class="role-name">Quality Inspector</div>
+          <div class="role-desc">Compliance, certificates, FOD</div>
+        </button>
+      </div>
+
+      <button type="submit" class="btn-primary btn-lg">Sign in to TSLMS</button>
+      <div class="login-sep"><span>demo access &mdash; no real credentials required</span></div>
+      <div class="role-cred">
+        stores123 / eng123 / insp123
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div id="app" class="app hidden">
+  <aside class="sidebar">
+    <div class="side-brand">
+      <div class="logo">TSLMS</div>
+      <div class="side-title">
+        <b>TSLMS Pro</b>
+        <small>Technical Stores</small>
+      </div>
+    </div>
+
+    <div class="side-user">
+      <div class="avatar" id="avatar">MC</div>
+      <div>
+        <div class="side-user-name" id="userName">M. Chikumba</div>
+        <div class="side-user-role" id="userRole">Stores Controller</div>
+      </div>
+      <button class="icon-btn" id="logoutBtn" title="Sign out">&#8594;</button>
+    </div>
+
+    <nav class="side-nav" id="sideNav"></nav>
+
+    <div class="side-foot">
+      <div class="side-foot-line">SIMULATION MODE</div>
+      <div class="side-foot-sub">Live data loop &middot; 5s refresh</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="page-title" id="pageTitle">Dashboard</div>
+      <div class="topbar-right">
+        <button class="btn btn-accent btn-scan" id="scanBtn" title="Intelligent scanner â€” barcode, QR, AI OCR">&#10052; Scan</button>
+        <div class="search-box">
+          <span class="search-ic">&#9906;</span>
+          <input type="text" id="globalSearch" placeholder="Search part, PN, ATA, WO...">
+        </div>
+        <button class="icon-btn" id="notifBtn" title="Notifications">
+          <span class="bell">&#128276;</span><span class="notif-dot" id="notifDot"></span>
+        </button>
+        <div class="clock" id="clock">--:--:--</div>
+      </div>
+    </header>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<!-- ============ NOTIFICATIONS PANEL ============ -->
+<div id="notifPanel" class="notif-panel hidden">
+  <div class="notif-title">Notifications</div>
+  <div id="notifList"></div>
+</div>
+
+<!-- ============ TOASTS ============ -->
+<div id="toasts" class="toasts"></div>
+
+<!-- ============ MODAL ROOT ============ -->
+<div id="modalRoot"></div>
+
+<script src="app.js?v=5"></script>
+<script src="ai.js?v=5"></script>
+</body>
+</html>

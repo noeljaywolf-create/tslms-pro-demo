@@ -1,0 +1,1099 @@
+/* ============================================================
+   TSLMS Pro — Aviation Technical Stores Intelligence Platform
+   Simulated intelligence layer (100% client-side, GitHub Pages ready)
+   ============================================================ */
+"use strict";
+
+/* ---------------- Helpers ---------------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const now = () => new Date();
+const fmtTime = (d) => d.toLocaleTimeString("en-GB");
+const pad = (n) => String(n).padStart(2, "0");
+
+let charts = {};
+function killChart(key) { if (charts[key]) { charts[key].destroy(); delete charts[key]; } }
+
+/* ---------------- Data store ---------------- */
+const STORE = {
+  users: [
+    { user: "m.chikumba", pass: "stores123", role: "stores", name: "M. Chikumba", title: "Stores Controller" },
+    { user: "t.ndlovu", pass: "eng123", role: "engineer", name: "T. Ndlovu", title: "Maintenance Engineer" },
+    { user: "k.moyo", pass: "insp123", role: "inspector", name: "K. Moyo", title: "Quality Inspector" }
+  ],
+  parts: [
+    { pn: "BSC-64-73221", name: "Wheel & Brake Assembly", ata: "32", stock: 2, min: 6, loc: "R1-B1", cert: "EASA F1 #E-88213", life: "OK", unit: 5300 },
+    { pn: "HYP-100-2", name: "Hydraulic Pump", ata: "29", stock: 9, min: 5, loc: "R1-B7", cert: "FAA 8130-3 #F-24510", life: "OK", unit: 1870 },
+    { pn: "FFT-450-A", name: "Fuel Flow Transmitter", ata: "28", stock: 8, min: 4, loc: "R1-B6", cert: "CAA ZW #C-1109", life: "OK", unit: 940 },
+    { pn: "WHB-32-881", name: "Wheel Hub LDG", ata: "32", stock: 1, min: 3, loc: "R2-B4", cert: "EASA F1 #E-99104", life: "EXPIRING", unit: 2100 },
+    { pn: "CSK-740-77", name: "Combustion Seal Kit", ata: "74", stock: 3, min: 4, loc: "R2-B2", cert: "FAA 8130-3 #F-30177", life: "OK", unit: 180 },
+    { pn: "GST-304-88", name: "Gas Starter Valve", ata: "80", stock: 7, min: 3, loc: "R3-B8", cert: "EASA F1 #E-20164", life: "OK", unit: 3200 },
+    { pn: "PMP-28-92", name: "Booster Pump", ata: "28", stock: 12, min: 5, loc: "R1-B8", cert: "CAA ZW #C-8821", life: "OK", unit: 760 },
+    { pn: "OIL-79-112", name: "Oil Cooler Core", ata: "79", stock: 4, min: 2, loc: "R3-B6", cert: "FAA 8130-3 #F-88093", life: "OK", unit: 4150 },
+    { pn: "BRG-27-230", name: "Control Bearing Set", ata: "27", stock: 3, min: 4, loc: "R1-B5", cert: "EASA F1 #E-33019", life: "OK", unit: 620 },
+    { pn: "SEAL-74-061", name: "High-Temp Seal", ata: "74", stock: 5, min: 2, loc: "R2-B7", cert: "CAA ZW #C-5512", life: "OK", unit: 95 },
+    { pn: "GEN-24-410", name: "IDG Generator", ata: "24", stock: 1, min: 2, loc: "R1-B3", cert: "FAA 8130-3 #F-77481", life: "OK", unit: 88500 },
+    { pn: "APU-49-300", name: "APU Starter Motor", ata: "49", stock: 6, min: 2, loc: "R3-B1", cert: "EASA F1 #E-66077", life: "OK", unit: 24000 }
+  ],
+  reqs: [],
+  aog: [],
+  events: []
+};
+
+/* Seed requisitions + AOG queue */
+function seedData() {
+  const base = [
+    { pn: "BRG-27-230", qty: 2, wo: "WO-24490", reg: "Z-WQA", by: "T. Ndlovu", step: 3, urgency: "HIGH", t: 14 },
+    { pn: "GST-304-88", qty: 1, wo: "WO-24497", reg: "Z-WRH", by: "T. Ndlovu", step: 2, urgency: "HIGH", t: 9 },
+    { pn: "SEAL-74-061", qty: 4, wo: "WO-24501", reg: "Z-WPV", by: "T. Ndlovu", step: 1, urgency: "ROUTINE", t: 6 },
+    { pn: "GEN-24-410", qty: 1, wo: "WO-24505", reg: "Z-WQA", by: "T. Ndlovu", step: 1, urgency: "ROUTINE", t: 4 }
+  ];
+  base.forEach((b) => addReq(b.pn, b.qty, b.wo, b.reg, b.urgency, b.step, b.t));
+  // Active AOG
+  STORE.aog.push({ ref: "AOG-88214", pn: "BSC-64-73221", reg: "Z-WPV", wo: "WO-24518", urgency: "AOG", step: 0, t: 8 });
+  pushEvent("AOG","AOG-88214 raised for Z-WPV — brake assembly required, aircraft on ground","danger",now());
+}
+
+let reqSeq = 24460;
+function addReq(pn, qty, wo, reg, urgency, step = 0, t = 0) {
+  const r = { ref: `REQ-${reqSeq++}`, pn, qty, wo, reg, urgency, step, t, by: "T. Ndlovu", created: now() };
+  STORE.reqs.push(r);
+  return r;
+}
+
+/* ---------------- Notifications ---------------- */
+const NOTIFS = [
+  { dot: "var(--red)", txt: "AOG-88214 — part BSC-64-73221 now Requested. Aircraft Z-WPV grounded.", time: "2m ago" },
+  { dot: "var(--amber)", txt: "Shelf-life: WHB-32-881 expires in 22 days — quarantined.", time: "18m ago" },
+  { dot: "var(--accent-2)", txt: "AI forecast: stockout of CSK-740-77 predicted in 9 days.", time: "41m ago" },
+  { dot: "var(--green)", txt: "REQ-24462 Issued, awaiting installation on Z-WRH.", time: "1h ago" }
+];
+function renderNotifs() {
+  $("notifList").innerHTML = NOTIFS.map((n) => `
+    <div class="notif-item"><i class="n-dot" style="background:${n.dot}"></i>
+      <div>${n.txt}<small>${n.time}</small></div></div>`).join("");
+}
+function flashNotif() {
+  const dot = $("notifDot");
+  setTimeout(() => dot.style.opacity = "1", 100);
+  setTimeout(() => dot.style.opacity = "0", 2600);
+}
+
+/* ---------------- Toasts ---------------- */
+function toast(kind, title, msg) {
+  const ic = { ok: "&#10003;", warn: "!", info: "i", danger: "!" };
+  const el = document.createElement("div");
+  el.className = `toast ${kind}`;
+  el.innerHTML = `<div class="t-ic">${ic[kind] || "i"}</div><div><b>${title}</b><small>${msg}</small></div>`;
+  $("toasts").appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity .4s"; setTimeout(() => el.remove(), 400); }, 3600);
+}
+
+function pushEvent(kind, title, msg, tone) {
+  STORE.events.push({ kind, title, msg, tone, icon: { ok: "&#10003;", warn: "!", info: "i", danger: "!" }[kind] || "i", time: now() });
+}
+
+/* ---------------- Auth ---------------- */
+let session = null;
+
+function doLogin(user, pass) {
+  const u = STORE.users.find((x) => x.user.toLowerCase() === user.toLowerCase() && x.pass === pass);
+  if (!u) {
+    if (!$("loginUser").value) $("userErr").textContent = "Enter a username.";
+    else $("userErr").textContent = "Unknown user.";
+    if (!$("loginPass").value) $("passErr").textContent = "Enter a password.";
+    else $("passErr").textContent = "Incorrect password. Use a demo role card.";
+    return;
+  }
+  session = u;
+  $("loginScreen").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  $("userName").textContent = u.name;
+  $("userRole").textContent = u.title;
+  $("avatar").textContent = u.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
+  renderNav();
+  route(location.hash || "#dashboard");
+  toast("ok", `Welcome back, ${u.name.split(" ")[0]}`, `Signed in as ${u.title}`);
+  seedData();
+  renderNotifs();
+}
+
+function renderNav() {
+  const nav = $("sideNav");
+  const menu = {
+    stores: [
+      { s: "Operations", items: [["#dashboard","Dashboard","&#9678;"],["#inventory","Inventory","&#9745;"],["#bins","Bin Map","&#9642;"],["#aog","AOG Desk","&#9888;", "aogBadge"],["#requisitions","Requisitions","&#8674;"],["#reports","Analytics","&#9661;"]] },
+      { s: "Intelligence", items: [["#assistant","AI Assistant","&#10052;"],["#forecast","AI Forecast","&#9680;"],["#passport","Parts Passport","&#9632;"]] }
+    ],
+    engineer: [
+      { s: "Maintenance", items: [["#dashboard","Dashboard","&#9678;"],["#aog","AOG Desk","&#9888;", "aogBadge"],["#requisitions","Requisitions","&#8674;"]] },
+      { s: "Intelligence", items: [["#assistant","AI Assistant","&#10052;"],["#forecast","AI Forecast","&#9680;"],["#passport","Parts Passport","&#9632;"]] }
+    ],
+    inspector: [
+      { s: "Quality", items: [["#dashboard","Dashboard","&#9678;"],["#compliance","Compliance","&#10003;"],["#reports","Audit Analytics","&#9661;"]] },
+      { s: "Traceability", items: [["#assistant","AI Assistant","&#10052;"],["#passport","Parts Passport","&#9632;"]] }
+    ]
+  };
+  const aogCount = STORE.aog.filter((a) => a.step < 3).length;
+  nav.innerHTML = (menu[session.role] || menu.stores).map((sec) => `
+    <div class="nav-section">${sec.s}</div>
+    ${sec.items.map(([href, label, ic, badge]) => `
+      <button class="nav-link" data-href="${href}">
+        <span class="n-ic">${ic}</span><span class="nav-txt">${label}</span>
+        ${badge ? `<span class="n-badge" id="${badge}">${aogCount}</span>` : ""}
+      </button>`).join("")}
+  `).join("");
+  document.querySelectorAll(".nav-link").forEach((b) => b.addEventListener("click", () => route(b.dataset.href)));
+}
+
+/* ---------------- Router ---------------- */
+/* Lazy wrappers so views defined in later scripts (ai.js) resolve without load-order errors */
+const VIEWS = {
+  dashboard: () => viewDashboard(),
+  inventory: () => viewInventory(),
+  bins: () => viewBins(),
+  aog: () => viewAog(),
+  requisitions: () => viewRequisitions(),
+  forecast: () => viewForecast(),
+  compliance: () => viewCompliance(),
+  passport: () => viewPassport(),
+  reports: () => viewReports(),
+  assistant: () => viewAssistant()
+};
+
+function route(hash) {
+  const key = (hash || "#dashboard").replace("#", "");
+  document.querySelectorAll(".nav-link").forEach((b) => b.classList.toggle("active", b.dataset.href === "#" + key));
+  const titles = { dashboard: "Operations Dashboard", inventory: "Inventory Control", bins: "Digital Bin & Storage Mapper", aog: "AOG Response Desk", requisitions: "Requisitions", forecast: "AI Predictive Intelligence", compliance: "Compliance & Certificates", passport: "Blockchain Parts Passport", reports: "Analytics & Reports", assistant: "AI Assistant" };
+  $("pageTitle").textContent = titles[key] || "Dashboard";
+  const view = VIEWS[key] || viewDashboard;
+  $("content").innerHTML = `<div class="view-head"><div class="view-title"><h2>${titles[key] || "Dashboard"}</h2><p id="viewSub"></p></div><div class="view-actions" id="viewActions"></div></div><div id="viewBody"></div>`;
+  view();
+}
+
+/* ---------------- Shared builders ---------------- */
+function viewDashboard() {
+  const aogActive = STORE.aog.filter((a) => a.step < 3);
+  const lowStock = STORE.parts.filter((p) => p.stock < p.min);
+  const risk = STORE.parts.filter((p) => p.life === "EXPIRING").length;
+  const stockValue = STORE.parts.reduce((s, p) => s + p.stock * p.unit, 0);
+  const spark = (vals, g) => vals.map((v) => `<i class="${g ? "g" : ""}" style="height:${v}%"></i>`).join("");
+  $("viewBody").innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Aircraft On Ground</span><span class="kpi-ic">&#9888;</span></div>
+        <div class="kpi-value">${aogActive.length}</div><div class="kpi-sub">active AOG events</div>
+        <div class="spark">${aogActive.length > 0 ? spark([30,45,38,55,70,80]) : spark([90,85,90,88,92,95])}</div></div>
+      <div class="kpi accent"><div class="kpi-top"><span class="kpi-label">Stock Value</span><span class="kpi-ic">&#128181;</span></div>
+        <div class="kpi-value">$${(stockValue / 1000).toFixed(1)}<span class="u">K</span></div><div class="kpi-sub">rotable + expendable</div>
+        <div class="spark">${spark([60,62,58,66,64,70])}</div></div>
+      <div class="kpi"><div class="kpi-top"><span class="kpi-label">AI Forecast Accuracy</span><span class="kpi-ic">&#9680;</span></div>
+        <div class="kpi-value">87<span class="u">%</span></div><div class="kpi-sub">90-day rolling</div>
+        <div class="spark">${spark([70,75,72,80,84,87,87])}</div></div>
+      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Open Requisitions</span><span class="kpi-ic">&#8674;</span></div>
+        <div class="kpi-value">${STORE.reqs.filter((r) => r.step < 3).length}</div><div class="kpi-sub">across all departments</div>
+        <div class="spark">${spark([40,45,43,50,48,42])}</div></div>
+      <div class="kpi ${risk ? "warn" : ""}"><div class="kpi-top"><span class="kpi-label">Shelf-Life Alerts</span><span class="kpi-ic">&#9881;</span></div>
+        <div class="kpi-value">${risk}</div><div class="kpi-sub">expiry within 60 days</div>
+        <div class="spark">${spark([20,20,20,20,60,100])}</div></div>
+      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Low Stock Items</span><span class="kpi-ic">&#9888;</span></div>
+        <div class="kpi-value">${lowStock.length}</div><div class="kpi-sub">below AI reorder point</div>
+        <div class="spark">${spark([40,50,60,70,60,55])}</div></div>
+    </div>
+    <div class="grid">${panelChart("Issues by ATA Chapter", "chartAta")}${panelChart("AI Demand — Actual vs Forecast", "chartDemand")}</div>
+    <div class="grid">${panelChart("Stock on Hand vs Reorder", "chartStock")}${panelChart("AOG Averted by Predictive AI", "chartAogAverted")}</div>
+    <div class="panel"><div class="panel-head"><div class="panel-title">Recent activity <span class="dim">live loop</span></div></div>
+      <div class="panel-body" id="activityFeed">${activityFeedHTML()}</div></div>`;
+  renderCharts();
+}
+
+function panelChart(title, id) {
+  return `<div class="panel"><div class="panel-head"><div class="panel-title">${title}</div></div><div class="panel-body"><canvas id="${id}" height="120"></canvas></div></div>`;
+}
+
+function activityFeedHTML() {
+  const items = [ ...STORE.events ].reverse().slice(0, 8);
+  const icons = { ok: "var(--green)", warn: "var(--amber)", info: "var(--accent-2)", danger: "var(--red)" };
+  return items.length ? items.map((e) => `
+    <div class="notif-item"><i class="n-dot" style="background:${icons[e.kind]}"></i>
+      <div><b>${e.title}</b><br>${e.msg}<small>${e.time.toLocaleTimeString("en-GB")}</small></div></div>`).join("")
+    : `<div class="empty"><div class="e-ic">&#9832;</div>No activity yet &mdash; route an AOG to begin.</div>`;
+}
+
+function renderCharts() {
+  if (typeof Chart === "undefined") { $("content").insertAdjacentHTML("afterbegin", '<div class="empty" style="margin-bottom:14px">Chart library failed to load &mdash; data views degraded, core functions still work.</div>'); return; }
+  try { renderChartsNow(); } catch (err) { console.warn("Chart render skipped:", err); }
+}
+
+function renderChartsNow() {
+  if ($("chartAta")) {
+    killChart("chartAta");
+    charts.chartAta = new Chart($("chartAta"), { type: "bar", data: {
+      labels: ["AB 21","AP 24","FC 27","FUEL 28","LDG 32","DRS 52","ENG 72","START 80"],
+      datasets: [{ label: "Issues (30d)", data: [18, 7, 15, 22, 31, 9, 24, 6], backgroundColor: ["#3f9bff","#9a7bff","#f5b12d","#18c98d","#f04e4e","#25c4e6","#e06aa8","#22c55e"], borderRadius: 6 }],
+    }, options: baseOpts({ labels: false }) });
+  }
+  if ($("chartDemand")) {
+    killChart("chartDemand");
+    charts.chartDemand = new Chart($("chartDemand"), { type: "line", data: {
+      labels: ["W1","W2","W3","W4","W5","W6","W7","W8"],
+      datasets: [
+        { label: "Actual", data: [12, 9, 14, 11, 16, 13, 15, 12], borderColor: "#3f9bff", backgroundColor: "rgba(63,155,255,0.08)", fill: true, tension: 0.35, pointRadius: 3 },
+        { label: "AI Forecast", data: [10, 12, 15, 14, 18, 17, 22, 24], borderColor: "#f5b12d", borderDash: [6,4], tension: 0.35, pointRadius: 3, pointBackgroundColor: "#f5b12d" }
+      ] }, options: baseOpts() });
+  }
+  if ($("chartStock")) {
+    killChart("chartStock");
+    charts.chartStock = new Chart($("chartStock"), { type: "bar", data: {
+      labels: ["Brake","O-ring","Fuel Pmp","Hub","Gen","Seal"],
+      datasets: [
+        { label: "On hand", data: [2, 8, 12, 1, 1, 5], backgroundColor: "#3f9bff", borderRadius: 5 },
+        { label: "Reorder", data: [6, 6, 5, 3, 2, 4], backgroundColor: "#f04e4e", borderRadius: 5 }
+      ] }, options: baseOpts({ labels: true }) });
+  }
+  if ($("chartAogAverted")) {
+    killChart("chartAogAverted");
+    charts.chartAogAverted = new Chart($("chartAogAverted"), { type: "doughnut", data: {
+      labels: ["Averted by AI", "Standard AOG"],
+      datasets: [{ data: [63, 37], backgroundColor: ["#18c98d", "#f04e4e"], borderWidth: 0 }]
+    }, options: { cutout: "62%", plugins: { legend: { position: "bottom", labels: { color: "#8496b4" } } } } });
+  }
+}
+
+function baseOpts(o = {}) {
+  return {
+    plugins: { legend: { labels: { color: "#8496b4", boxWidth: 10, font: { size: 11 } } } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: "#1e2c49" }, ticks: { color: "#8496b4", font: { size: 10 } } },
+      x: { grid: { display: false }, ticks: { color: "#8496b4", font: { size: 10 } } }
+    },
+    maintainAspectRatio: false
+  };
+}
+
+/* ---------------- Inventory view ---------------- */
+function viewInventory() {
+  $("viewSub").textContent = "Searchable store-wide inventory with release certificates and AI reorder status.";
+  $("viewActions").innerHTML = `<button class="btn btn-accent" onclick="openTransferModal()">+ Transfer / Issue</button>`;
+  const q = (globalSearchValue || "").toLowerCase();
+  const rows = STORE.parts
+    .filter((p) => !q || p.pn.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || p.ata.includes(q))
+    .map((p) => {
+      const low = p.stock < p.min;
+      const life = p.life === "EXPIRING";
+      return `<tr>
+        <td><span class="pn">${p.pn}</span></td>
+        <td>${p.name}</td>
+        <td>ATA ${p.ata}</td>
+        <td>${p.loc}</td>
+        <td class="num"><b>${p.stock}</b> / ${p.min}</td>
+        <td>${low ? '<span class="tag danger">REORDER</span>' : '<span class="tag ok">HEALTHY</span>'}</td>
+        <td>${life ? '<span class="tag warnb">QUARANTINED</span>' : '<span class="tag info">VALID</span>'}</td>
+        <td>${p.cert}</td>
+      </tr>`;
+    }).join("");
+  $("viewBody").innerHTML = `
+    <div class="panel">
+      <div class="table-wrap"><table class="tbl">
+        <thead><tr><th>Part No.</th><th>Description</th><th>ATA</th><th>Location</th><th>Stock / Min</th><th>Status</th><th>Shelf-Life</th><th>Release Cert</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="8"><div class="empty">No parts match your search.</div></td></tr>'}</tbody>
+      </table></div>
+    </div>`;
+}
+
+let globalSearchValue = "";
+$("globalSearch").addEventListener("input", (e) => {
+  globalSearchValue = e.target.value;
+  if (location.hash === "#inventory") viewInventory();
+});
+
+/* ---------------- Transfer modal ---------------- */
+function openTransferModal() {
+  $("modalRoot").innerHTML = `
+    <div class="modal-backdrop" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-head"><div class="modal-title">Transfer / Issue Part</div><button class="modal-x" onclick="closeModal(event)">&#10005;</button></div>
+        <div class="modal-body">
+          <label>Part Number</label>
+          <select id="trPn">${STORE.parts.map((p) => `<option value="${p.pn}">${p.pn} &mdash; ${p.name} (${p.stock} available)</option>`).join("")}</select>
+          <label>Quantity</label>
+          <input type="number" id="trQty" value="1" min="1">
+          <label>Destination / Aircraft</label>
+          <input type="text" id="trDest" value="Z-WPV">
+          <label>Issue Type</label>
+          <select id="trType"><option>Line Issue</option><option>Hangar Issue</option><option>Inter-store Transfer</option></select>
+          <button class="btn-primary" onclick="doTransfer()">Confirm Transfer</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function closeModal(e) {
+  if (e && e.target && e.target.classList && e.target.classList.contains("modal-backdrop")) { stopScanner(); $("modalRoot").innerHTML = ""; return; }
+  stopScanner();
+  $("modalRoot").innerHTML = "";
+}
+
+/* ============ INTELLIGENT SCANNER ============ */
+/* Modes: 1) Smart Auto (barcode/QR via camera)  2) AI OCR (reads printed labels via Tesseract)
+           3) Fuzzy part matching with confidence   4) Manual entry fallback            */
+
+let scanner = null;
+let aiMode = "auto";
+
+function openScanner() {
+  stopScanner();
+  $("modalRoot").innerHTML = `
+    <div class="modal-backdrop" onclick="closeModal(event)">
+      <div class="modal modal-scanner modal-xl" onclick="event.stopPropagation()">
+        <div class="modal-head">
+          <div><div class="modal-title">Intelligent Scanner</div><div class="scan-subtitle">AI vision · barcode · fuzzy part matching</div></div>
+          <button class="modal-x" onclick="closeModal(event)">&#10005;</button>
+        </div>
+        <div class="modal-body">
+          <div class="scanner-tabs">
+            <button class="btn btn-sm" id="tabAuto">&#10052; Smart Auto</button>
+            <button class="btn btn-sm" id="tabOcr">&#128451; AI OCR</button>
+            <button class="btn btn-sm" id="tabMan">&#128221; Manual</button>
+          </div>
+          <div id="scannerPane">
+            <div id="qrRegion" class="qr-region"><div class="empty" style="padding:70px 20px"><div class="e-ic">&#10052;</div>Starting camera…</div></div>
+            <div class="scanner-help">Point at a part label.</div>
+          </div>
+          <div id="scanManual" class="hidden">
+            <label>Enter part number / QR payload or paste OCR text</label>
+            <input type="text" id="scanInput" placeholder="e.g. BSC-64-73221">
+            <button class="btn-primary" onclick="manualScan()">Smart Lookup</button>
+          </div>
+          <div id="scanResult"></div>
+        </div>
+      </div>
+    </div>`;
+  $("tabAuto").addEventListener("click", () => setScanMode("auto"));
+  $("tabOcr").addEventListener("click", () => setScanMode("ocr"));
+  $("tabMan").addEventListener("click", () => setScanMode("man"));
+  setScanMode("auto");
+}
+
+function setScanMode(mode) {
+  aiMode = mode;
+  stopScanner();
+  document.querySelectorAll(".scanner-tabs .btn").forEach((b) => b.classList.remove("btn-accent"));
+  if (mode === "auto") {
+    $("tabAuto").classList.add("btn-accent");
+    $("scannerPane").classList.remove("hidden");
+    $("scanManual").classList.add("hidden");
+    $("scannerPane").innerHTML = `<div id="qrRegion" class="qr-region"><div class="empty" style="padding:70px 20px"><div class="e-ic">&#10052;</div>Starting camera…</div></div>
+      <div class="scanner-help">Auto-decodes any barcode or QR in view. Works over <b>HTTPS</b> (GitHub Pages).</div>`;
+    startScanner();
+  } else if (mode === "ocr") {
+    $("tabOcr").classList.add("btn-accent");
+    $("scannerPane").classList.remove("hidden");
+    $("scanManual").classList.add("hidden");
+    const hasOcr = typeof Tesseract !== "undefined";
+    $("scannerPane").innerHTML = `<div id="qrRegion" class="qr-region">${hasOcr
+        ? `<div class="empty" style="padding:70px 20px"><div class="e-ic">&#128451;</div>Starting camera…</div>`
+        : `<div class="empty"><div class="e-ic">&#9888;</div>OCR engine not loaded.<br>Use Smart Auto or Manual.</div>`}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn btn-accent" id="snapBtn" ${hasOcr ? "" : "disabled"}>&#128451; Snapshot & Read</button>
+        <span class="ocr-status" id="ocrStatus">Camera needed for snapshots</span>
+      </div>
+      <div class="scanner-help">AI OCR reads part numbers, serials and QR text directly off the printed label &mdash; no barcode required.</div>`;
+    if (hasOcr) {
+      $("snapBtn").addEventListener("click", snapshotOcr);
+      startScanner();
+    }
+  } else {
+    $("tabMan").classList.add("btn-accent");
+    $("scannerPane").classList.add("hidden");
+    $("scanManual").classList.remove("hidden");
+    $("scanResult").innerHTML = "";
+    setTimeout(() => $("scanInput") && $("scanInput").focus(), 60);
+  }
+}
+
+function startScanner(cb) {
+  if (scanner || typeof Html5Qrcode === "undefined") return;
+  const region = $("qrRegion");
+  if (!region) return;
+  try {
+    scanner = new Html5Qrcode("qrRegion");
+    scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: aiMode === "ocr" ? { width: 300, height: 220 } : { width: 240, height: 200 } },
+      (decoded) => {
+        if (aiMode === "auto") handleScanCode(decoded);
+      },
+      () => {}
+    ).catch(() => showScanMsg("Camera unavailable — use Manual entry instead.", true));
+  } catch (err) {
+    showScanMsg("Could not start camera: " + err.message, true);
+  }
+}
+
+function stopScanner() {
+  if (scanner) {
+    try { scanner.stop().then(() => scanner.clear()).catch(() => {}); } catch (e) {}
+    scanner = null;
+  }
+}
+
+function showScanMsg(msg, tone) {
+  const pane = $("scannerPane");
+  if (pane) pane.innerHTML = `<div class="empty"><div class="e-ic">&#9888;</div>${msg}</div>`;
+  if (tone) toast("warn", "Scanner", msg);
+}
+
+/* ---------- Core intelligence ---------- */
+
+function norm(s) { return String(s || "").toUpperCase().replace(/[\s\-_.:\/]/g, ""); }
+function low(s) { return String(s || "").toLowerCase(); }
+
+function lev(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const d = Array.from({ length: m + 1 }, (_, i) => i ? new Array(n + 1).fill(0) : Array.from({ length: n + 1 }, (_, j) => j));
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
+    const c = a[i - 1] === b[j - 1] ? 0 : 1;
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+  }
+  return d[m][n];
+}
+
+function extractPN(text) {
+  const t = String(text || "").toUpperCase().replace(/\s+/g, " ").trim();
+  const re = /\b[A-Z]{2,6}[\s-]?\d{1,4}[\s-]?\d{2,6}\b|\b\d{4,5}[\s-]?\d{3,6}\b/g;
+  return (t.match(re) || []).map((x) => x.replace(/\s+/g, "-"));
+}
+
+function analyzeCode(input) {
+  const raw = String(input || "").trim();
+  const parts = STORE.parts;
+  // exact
+  const exact = parts.find((p) => low(p.pn) === low(raw));
+  if (exact) return { status: "exact", part: exact, confidence: 100, raw, candidates: [], text: "" };
+
+  // collect candidate tokens (whole string or extracted PN patterns)
+  const tokens = [...new Set([raw, ...extractPN(raw)])];
+  let best = null;
+  for (const t of tokens) {
+    const tn = norm(t);
+    if (!tn) continue;
+    for (const p of parts) {
+      const d = lev(tn, norm(p.pn));
+      const maxLen = Math.max(tn.length, norm(p.pn).length);
+      const conf = Math.max(0, Math.round(100 - (d / maxLen) * 100));
+      if (!best || conf > best.conf) best = { part: p, conf, dist: d };
+    }
+  }
+  if (best && best.conf >= 75) {
+    return { status: best.conf >= 92 ? "fuzzy" : "near", part: best.part, confidence: best.conf, raw, candidates: tail(raw), text: "" };
+  }
+  // alternatives sorted by distance
+  const alt = parts.map((p) => ({ p, d: lev(norm(raw), norm(p.pn)) })).sort((a, b) => a.d - b.d).slice(0, 4);
+  return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", alternatives: alt };
+}
+
+function tail(raw) {
+  const s = String(raw || "").trim();
+  if (s.length < 6) return [];
+  return extractPN(s).slice(1, 4);
+}
+
+/* ---------- Result rendering ---------- */
+
+function renderAnalysis(a, meta) {
+  const openActs = (pn) => `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn btn-sm btn-accent" onclick="actIssue('${pn}')">Issue part</button>
+      <button class="btn btn-sm" onclick="actAog('${pn}')">Raise AOG</button>
+      <button class="btn btn-sm" onclick="route('#passport')">Passport</button>
+    </div>`;
+
+  if (a.status === "exact") {
+    return partSheet(a.part, 100) + openActs(a.part.pn);
+  }
+  if (a.status === "fuzzy" || a.status === "near") {
+    const p = a.part;
+    const cls = a.confidence >= 92 ? "tag ok" : a.confidence >= 82 ? "tag info" : "tag warnb";
+    return `<div style="margin-top:6px"><span class="tag ${cls}">AI MATCH ${a.confidence}%</span>
+      <div style="font-weight:800;font-size:15px;margin-top:6px">${p.name}</div>
+      <span class="pn">${p.pn}</span> &middot; ATA ${p.ata} &middot; Bin ${p.loc}</div>
+      <div style="font-size:12px;color:var(--dim);margin-top:6px">Read <span class="pn">${esc(a.raw)}</span> — fuzzy-matched by intelligence engine ${a.confidence >= 92 ? "(near-perfect)" : "(low-confidence)"}. Verify against the physical label before issuing.</div>
+      ${partSheetMini(p)}${openActs(p.pn)}`;
+  }
+  // none / alternatives
+  const alts = (a.alternatives || []).map((x) => `
+    <button class="btn btn-sm alt-pill" onclick="manualScan('${x.p.pn}')">${x.p.pn} <span style="opacity:.6">(${x.d})</span></button>`).join("");
+  return `<div class="empty" style="padding:18px"><div class="e-ic">&#9888;</div>
+    No exact part for <b>${esc(a.raw)}</b>.
+    ${alts ? `<div style="margin-top:10px;font-size:12px;color:var(--dim)">Closest stocked parts:</div><div style="margin-top:6px">${alts}</div>` : ""}
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-sm btn-accent" onclick="actAog('${esc(a.raw)}')">Raise AOG</button>
+      <button class="btn btn-sm" onclick="actRegister('${esc(a.raw)}')">Register new part</button>
+    </div></div>`;
+}
+
+function partSheet(p, conf) {
+  const low = p.stock < p.min;
+  return `<div style="margin-top:6px"><span class="tag ok">${typeof conf === "number" ? "EXACT " + conf + "%" : "VERIFIED"}</span>
+    <div style="font-weight:800;font-size:15px;margin-top:6px">${p.name}</div>
+    <span class="pn">${p.pn}</span> &middot; ATA ${p.ata} &middot; Bin ${p.loc}</div>
+    <div class="dl">
+      <div><div class="k">Stock on hand</div><div class="v">${p.stock} pcs (min ${p.min}) ${low ? '<span class="tag danger">REORDER</span>' : '<span class="tag ok">HEALTHY</span>'}</div></div>
+      <div><div class="k">Release certificate</div><div class="v">${p.cert}</div></div>
+      <div><div class="k">Shelf-life</div><div class="v">${p.life === "EXPIRING" ? '<span class="tag warnb">QUARANTINED</span>' : '<span class="tag info">VALID</span>'}</div></div>
+      <div><div class="k">Blockchain passport</div><div class="v"><span class="pn">0x${(p.pn.split("").reduce((a, c) => a + c.charCodeAt(0), 0)).toString(16)}…</span></div></div>
+    </div>`;
+}
+
+function partSheetMini(p) {
+  const low = p.stock < p.min;
+  return `<div class="dl" style="margin-top:10px">
+      <div><div class="k">Stock</div><div class="v">${p.stock} pcs ${low ? '<span class="tag danger">REORDER</span>' : ""}</div></div>
+      <div><div class="k">Certificate</div><div class="v">${p.cert}</div></div>
+    </div>`;
+}
+
+/* ---------- Smart actions ---------- */
+function actIssue(pn) {
+  const p = STORE.parts.find((x) => x.pn === pn);
+  closeModal();
+  toast("ok", "Part issued", `${pn} released to the line.`);
+  pushEvent("ok", `Issued: ${pn}`, p ? p.name : "", "ok");
+  route("#requisitions");
+}
+
+function actAog(pnVal) {
+  const pn = (STORE.parts.find((x) => x.pn === pnVal) || {}).pn || pnVal;
+  closeModal();
+  const a = { ref: `AOG-${String(88214 + STORE.aog.length + 1)}`, pn, reg: "Z-WPV", wo: "WO-24522", urgency: "AOG", step: 0, t: 0 };
+  STORE.aog.unshift(a);
+  pushEvent("danger", a.ref + " raised", `${pn} — urgent store action`, "danger");
+  toast("danger", "AOG raised", a.ref + " — store staff notified.");
+  route("#aog");
+}
+
+function actRegister(pnVal) {
+  if (STORE.parts.some((p) => p.pn === pnVal)) { toast("warn", "Already exists", pnVal + " is already registered."); return; }
+  STORE.parts.push({ pn: pnVal, name: "Newly registered part", ata: "00", stock: 0, min: 1, loc: "R3-B8", cert: "Cert pending", life: "OK", unit: 0 });
+  toast("ok", "Part registered", pnVal + " added to inventory (0 stock, awaiting receipt).");
+  pushEvent("info", "Registered", pnVal + " added to inventory", "info");
+  closeModal();
+  route("#inventory");
+}
+
+/* ---------- Barcode / QR handling ---------- */
+function handleScanCode(decoded) {
+  if (!scanner) return;
+  stopScanner();
+  const meta = { src: "barcode-qr" };
+  const a = analyzeCode(decoded);
+  $("scanResult").innerHTML = `<div class="scan-kicker"><span class="tag info">SMART AUTO</span> decoded <span class="pn">${esc(decoded)}</span></div>` + renderAnalysis(a, meta);
+  if (a.status === "exact") toast("ok", "Scan matched", decoded + " → " + a.part.pn);
+  else if (a.status === "none") toast("warn", "No exact match", "Showing closest parts & actions.");
+}
+
+function manualScan(prefill) {
+  const val = (prefill !== undefined ? prefill : ($("scanInput") || {}).value);
+  if (prefill === undefined) stopScanner();
+  if (!String(val).trim()) { toast("warn", "Empty code", "Enter a part number, QR payload or OCR text."); return; }
+  const code = String(val).trim();
+  const a = analyzeCode(code);
+  $("scanResult").innerHTML = `<div class="scan-kicker"><span class="tag ${a.status === "exact" ? "ok" : "neutral"}">SMART LOOKUP</span> input <span class="pn">${esc(code)}</span></div>` + renderAnalysis(a);
+  if (a.status === "exact") toast("ok", "Match found", a.part.pn + " verified in inventory.");
+  else if (a.status === "none") toast("warn", "No exact match", "Showing closest parts & actions.");
+}
+
+/* ---------- AI OCR (Tesseract) ---------- */
+const ocrEng = { worker: null, ready: false };
+
+async function ocrEnsure() {
+  if (ocrEng.worker) return ocrEng.worker;
+  if (typeof Tesseract === "undefined") throw new Error("OCR library missing");
+  const st = $("ocrStatus");
+  if (st) { st.textContent = "Loading OCR engine… (~12 MB, one-time)"; st.classList.add("pulse"); }
+  ocrEng.worker = await Tesseract.createWorker("eng", 1, {
+    workerPath: "vendor/tesseract/worker.min.js",
+    corePath: "vendor/tesseract/",
+    langPath: "vendor/tesseract",
+    gzip: true,
+    logger: (m) => {
+      const s = $("ocrStatus");
+      if (s && typeof m.status === "string" && !s.dataset.done) s.textContent = "OCR: " + m.status + (m.progress ? " " + Math.round(m.progress * 100) + "%" : "");
+    }
+  });
+  ocrEng.ready = true;
+  if (st) { st.textContent = "OCR engine ready"; st.classList.remove("pulse"); }
+  return ocrEng.worker;
+}
+
+function captureFrame() {
+  const video = document.querySelector("#qrRegion video");
+  if (!video || !video.videoWidth) throw new Error("No camera feed — snapshot needs the camera running.");
+  const canvas = document.createElement("canvas");
+  const scale = 640 / video.videoWidth;
+  canvas.width = 640;
+  canvas.height = Math.round(video.videoHeight * scale);
+  const ctx = canvas.getContext("2d");
+  ctx.filter = "grayscale(1) contrast(1.5)";
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+async function snapshotOcr() {
+  const st = $("ocrStatus");
+  try {
+    const canvas = captureFrame();
+    st.textContent = "Reading label…";
+    const worker = await ocrEnsure();
+    const { data } = await worker.recognize(canvas);
+    const text = (data && data.text || "").trim();
+    st.textContent = "AI read complete";
+    $("scanResult").innerHTML = `<div class="scan-kicker"><span class="tag violet">AI OCR</span> <span style="font-size:12px;color:var(--dim)">confidence ${Math.round(((data && data.confidence) || 0))}%</span></div>
+      <div class="ocr-raw"><b>Raw text</b><br>${esc(text) || "<i>nothing readable</i>"}</div>`;
+    if (!text) { toast("warn", "OCR read nothing", "Try better lighting / closer focus, or use Manual."); return; }
+    const a = analyzeCode(text);
+    $("scanResult").innerHTML += renderAnalysis(a);
+    if (a.status === "exact") toast("ok", "OCR matched", text.replace(/\s+/g, " ").slice(0, 28) + " → " + a.part.pn);
+    else if (a.status === "none") toast("warn", "OCR read but no exact PN", "Showing nearest parts.");
+  } catch (err) {
+    st.textContent = err.message;
+    toast("danger", "OCR error", err.message);
+  }
+}
+
+function doTransfer() {
+  const pn = $("trPn").value;
+  const qty = parseInt($("trQty").value, 10) || 1;
+  const dest = $("trDest").value || "Z-WPV";
+  const p = STORE.parts.find((x) => x.pn === pn);
+  if (!p || qty > p.stock) { toast("danger", "Transfer failed", "Quantity exceeds available stock."); return; }
+  p.stock -= qty;
+  closeModal();
+  toast("ok", "Transfer completed", `${qty} × ${pn} issued to ${dest}. Inventory updated in real time.`);
+  pushEvent("ok", `Stock out: ${pn} × ${qty}`, `Issued to ${dest} — ${p.name}`, "ok");
+  route(location.hash);
+}
+
+/* ---------------- Bin Map ---------------- */
+const RACKS = [
+  { id: 1, name: "Rack A — Systems & Avionics", color: "#3f9bff", cols: 9, bins: [["21-01",14,18],["22-02",9,9],["24-03",7,5],["26-04",16,16],["27-05",11,11],["28-06",3,8],["29-07",12,12],["30-08",8,6],["31-09",15,15]] },
+  { id: 2, name: "Rack B — Landing Gear", color: "#f5b12d", cols: 8, bins: [["32-01",2,9],["32-02",6,6],["32-03",14,10],["32-04",1,8],["32-05",9,9],["32-06",4,4],["32-07",7,5],["32-08",11,11]] },
+  { id: 3, name: "Rack C — Engines & Interior", color: "#9a7bff", cols: 8, bins: [["52-01",10,10],["56-02",13,13],["72-03",6,4],["73-04",9,9],["74-05",5,3],["76-06",12,12],["78-07",8,8],["80-08",7,5]] }
+];
+const BINMATCH = { "28-06": "GEN-24-410", "73-04": "GST-304-88", "32-01": "BSC-64-73221", "74-05": "SEAL-74-061" };
+
+function viewBins() {
+  $("viewSub").textContent = "Interactive rack / shelf / bin grid, colour-coded by ATA Spec 100 chapter.";
+  $("viewActions").innerHTML = `<span class="chip">Module 1</span><span class="chip">Module 8 <b>IoT</b></span>`;
+  $("viewBody").innerHTML = `
+    <div class="legend">
+      <span><i class="swatch" style="background:#3f9bff"></i> ATA 21–36 Systems</span>
+      <span><i class="swatch" style="background:#f5b12d"></i> ATA 32 Landing Gear</span>
+      <span><i class="swatch" style="background:#9a7bff"></i> ATA 52+ Interior / 72–80 Engine</span>
+      <span><i class="swatch" style="background:transparent;border:1px dashed #f04e4e"></i> Below reorder</span>
+    </div>
+    <div id="rackArea"></div>
+    <div class="panel detail-sheet" id="binDetail"><div class="empty"><div class="e-ic">&#9642;</div>Select a bin to inspect stock, certificates & blockchain passport.</div></div>`;
+
+  const area = $("rackArea");
+  area.innerHTML = RACKS.map((r) => `
+    <div class="rack">
+      <div class="rack-title"><span class="r-ic">&#9783;</span> ${r.name} <span class="chip">${r.cols} columns</span></div>
+      <div class="rack-row" style="--cols:${r.cols}">
+        <div class="rack-side">R${r.id}</div>
+        ${r.bins.map(([code, stock, min], i) => {
+          const low = stock < min;
+          const alpha = low ? 0.45 : 0.35;
+          return `<div class="bin ${low ? "low" : ""}" style="background:rgba(${hexToRgb(r.color)},${alpha})" data-rack="${r.id}" data-idx="${i}" data-color="${r.color}">
+            <div>${code}</div><small>${stock}</small>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`).join("");
+
+  area.querySelectorAll(".bin").forEach((b) => b.addEventListener("click", selectBin));
+}
+
+function hexToRgb(hex) { const h = hex.replace("#", ""); const f = (i) => parseInt(h.substr(i, 2), 16); return `${f(0)},${f(2)},${f(4)}`; }
+
+function selectBin(e) {
+  const bin = e.currentTarget;
+  document.querySelectorAll(".bin").forEach((b) => b.classList.remove("selected"));
+  bin.classList.add("selected");
+  const rack = RACKS.find((r) => r.id == bin.dataset.rack);
+  const [code, stock, min] = rack.bins[parseInt(bin.dataset.idx, 10)];
+  const loc = `R${rack.id}-B${parseInt(bin.dataset.idx, 10) + 1}`;
+  const matched = Object.keys(BINMATCH).find((k) => rack.bins[parseInt(bin.dataset.idx, 10)][0] === k);
+  const part = STORE.parts.find((p) => p.pn === BINMATCH[matched]) ||
+    { pn: "MISC-ATA-" + code.replace("-", ""), name: "Consumable / hardware", cert: "Batch cert on file", life: "OK", unit: 0 };
+  const pn = part.pn;
+  $("binDetail").innerHTML = `
+    <div class="panel-head"><div class="panel-title">Bin ${code} &mdash; ${rack.name.replace(" — ", " · ")}</div>
+      <span class="${stock < min ? "tag danger" : "tag ok"}">${stock < min ? "BELOW REORDER" : "IN STOCK"}</span></div>
+    <div class="panel-body">
+      <div style="margin-bottom:8px"><b>${part.name}</b><br><span class="pn">${pn}</span></div>
+      <div class="dl">
+        <div><div class="k">Physical location</div><div class="v">${loc} · Rack ${rack.id}</div></div>
+        <div><div class="k">Stock on hand</div><div class="v">${stock} pcs (min ${min})</div></div>
+        <div><div class="k">Release certificate</div><div class="v">${part.cert}</div></div>
+        <div><div class="k">Shelf-life status</div><div class="v">${part.life === "EXPIRING" ? '<span class="tag warnb">QUARANTINED</span>' : '<span class="tag info">VALID</span>'}</div></div>
+        <div><div class="k">Blockchain passport</div><div class="v"><span class="pn">0x${Math.abs(((pn + "|" + code).split("").reduce((a, c) => a + c.charCodeAt(0), 0))).toString(16)}... </span></div></div>
+        <div><div class="k">IoT condition</div><div class="v">${stock < min ? '<span class="tag warnb">AI FLAG</span>' : '<span class="tag ok">NOMINAL</span>'}</div></div>
+      </div>
+    </div>`;
+}
+
+/* ---------------- AOG Desk (kanban) ---------------- */
+function viewAog() {
+  $("viewSub").textContent = "Emergency parts pipeline — Requested → Picked → Issued → Installed.";
+  $("viewActions").innerHTML = `<button class="btn btn-accent" onclick="openAogModal()">+ Raise AOG</button><span class="chip">Module 3</span>`;
+
+  const cols = [
+    ["requested", "Requested", STORE.aog.filter((a) => a.step === 0)],
+    ["picked", "Picked", STORE.aog.filter((a) => a.step === 1)],
+    ["issued", "Issued", STORE.aog.filter((a) => a.step === 2)],
+    ["installed", "Installed", STORE.aog.filter((a) => a.step === 3)]
+  ];
+  $("viewBody").innerHTML = `
+    <div class="kanban">${cols.map(([cls, label, items]) => `
+      <div class="kb-col ${cls}">
+        <div class="kb-head"><span class="kb-dot"></span>${label}<span class="cnt">${items.length}</span></div>
+        <div class="kb-body">${items.map(kbCard).join("") || `<div class="empty" style="padding:24px 8px">No items</div>`}</div>
+      </div>`).join("")}
+    </div>
+    <div class="panel"><div class="panel-head"><div class="panel-title">AOG activity log</div></div>
+      <div class="panel-body" id="aogLog">${activityFeedHTML()}</div></div>`;
+}
+
+function kbCard(a) {
+  const cls = a.urgency === "AOG" ? "kb-aog" : a.urgency === "HIGH" ? "kb-high" : "";
+  const next = a.step < 3;
+  return `<div class="kb-card ${cls}">
+    <div class="kb-top"><span class="kb-ref">${a.ref}</span>
+      <span class="tag ${a.urgency === "AOG" ? "danger" : a.urgency === "HIGH" ? "warnb" : "neutral"}">${a.urgency}</span></div>
+    <div class="kb-part">${a.pn}</div>
+    <div class="kb-meta">${a.reg} · ${a.wo}<br>${a.t}m elapsed</div>
+    ${next ? `<div class="kb-actions"><button class="btn btn-sm btn-accent" onclick="advanceAog('${a.ref}')">Advance &rarr;</button></div>` : ""}
+  </div>`;
+}
+
+function openAogModal() {
+  $("modalRoot").innerHTML = `
+    <div class="modal-backdrop" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-head"><div class="modal-title">Raise Emergency AOG</div><button class="modal-x" onclick="closeModal(event)">&#10005;</button></div>
+        <div class="modal-body">
+          <label>Part Number</label>
+          <select id="aogPn">${STORE.parts.map((p) => `<option value="${p.pn}">${p.pn} — ${p.name}</option>`).join("")}</select>
+          <label>Aircraft Registration</label>
+          <input type="text" id="aogReg" value="Z-WPV">
+          <label>Work Order</label>
+          <input type="text" id="aogWo" value="WO-24519">
+          <label>Urgency</label>
+          <select id="aogUrg"><option value="AOG">AOG — Grounded</option><option value="HIGH">High — Next dispatch</option><option value="ROUTINE">Routine</option></select>
+          <button class="btn-primary" onclick="doRaiseAog()">Raise Requisition</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function doRaiseAog() {
+  const pn = $("aogPn").value;
+  const a = { ref: `AOG-${String(88214 + STORE.aog.length + 1)}`, pn, reg: $("aogReg").value || "Z-WPV", wo: $("aogWo").value || "WO-24519", urgency: $("aogUrg").value, step: 0, t: 0 };
+  STORE.aog.unshift(a);
+  closeModal();
+  toast("danger", "AOG requisition raised", `${a.ref} — ${pn} for ${a.reg}. Store notified instantly.`);
+  pushEvent("danger", a.ref + " raised", `${pn} for ${a.reg} — ${a.urgency}`, "danger");
+  route(location.hash);
+}
+
+function advanceAog(ref) {
+  const a = STORE.aog.find((x) => x.ref === ref);
+  if (!a) return;
+  const label = ["Requested", "Picked", "Issued", "Installed"];
+  a.step++;
+  if (a.step === 1) pushEvent("info", a.ref + " picked", `${a.pn} picked at store`, "info");
+  if (a.step === 2) pushEvent("ok", a.ref + " issued", `${a.pn} released to ${a.reg}`, "ok");
+  if (a.step === 3) { pushEvent("ok", a.ref + " installed", `${a.pn} installed — WO ${a.wo} cleared`, "ok"); toast("ok", "AOG resolved", `${a.ref} — ${a.pn} installed on ${a.reg}. Aircraft cleared for dispatch.`); }
+  else toast("info", `Step advanced`, `${a.ref} is now ${label[a.step]}.`, "info");
+  route(location.hash);
+}
+
+/* ---------------- Requisitions ---------------- */
+function viewRequisitions() {
+  $("viewSub").textContent = "Full requisition ledger with real-time status and digital signatures.";
+  $("viewActions").innerHTML = `<button class="btn btn-accent" onclick="openReqModal()">+ New Requisition</button>`;
+  const rows = [...STORE.reqs].reverse().map((r) => `
+    <tr>
+      <td><span class="pn">${r.ref}</span></td>
+      <td><span class="pn">${r.pn}</span></td>
+      <td>${r.qty}</td>
+      <td>${r.reg}</td>
+      <td>${r.wo}</td>
+      <td><span class="tag ${r.urgency === "AOG" ? "danger" : r.urgency === "HIGH" ? "warnb" : "neutral"}">${r.urgency}</span></td>
+      <td><span class="tag ${r.step === 3 ? "ok" : r.step === 2 ? "info" : r.step === 1 ? "neautral" : ""}">${["Requested","Picked","Issued","Installed"][r.step]}</span></td>
+      <td>${r.by}</td>
+      <td class="num">${r.t}m</td>
+    </tr>`).join("");
+  $("viewBody").innerHTML = `
+    <div class="panel">
+      <div class="table-wrap"><table class="tbl">
+        <thead><tr><th>Ref</th><th>Part</th><th>Qty</th><th>Aircraft</th><th>WO</th><th>Urgency</th><th>Status</th><th>Raised by</th><th>Elapsed</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>`;
+}
+
+function openReqModal() {
+  $("modalRoot").innerHTML = `
+    <div class="modal-backdrop" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-head"><div class="modal-title">New Store Requisition</div><button class="modal-x" onclick="closeModal(event)">&#10005;</button></div>
+        <div class="modal-body">
+          <label>Part Number</label>
+          <select id="reqPn">${STORE.parts.map((p) => `<option value="${p.pn}">${p.pn} — ${p.name}</option>`).join("")}</select>
+          <label>Quantity</label>
+          <input type="number" id="reqQty" value="1" min="1">
+          <label>Aircraft Registration</label>
+          <input type="text" id="reqReg" value="Z-WRH">
+          <label>Work Order</label>
+          <input type="text" id="reqWo" value="WO-24520">
+          <label>Urgency</label>
+          <select id="reqUrg"><option value="ROUTINE">Routine</option><option value="HIGH">High — Next dispatch</option><option value="AOG">AOG — Grounded</option></select>
+          <button class="btn-primary" onclick="doNewReq()">Create Requisition</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function doNewReq() {
+  const pn = $("reqPn").value;
+  const qty = parseInt($("reqQty").value, 10) || 1;
+  const r = addReq(pn, qty, $("reqWo").value || "WO-24520", $("reqReg").value || "Z-WRH", $("reqUrg").value);
+  closeModal();
+  toast("ok", "Requisition created", `${r.ref} — ${pn} × ${qty}.`);
+  pushEvent("info", r.ref + " created", `${pn} × ${qty} for ${r.reg}`, "info");
+  route(location.hash);
+}
+
+/* ---------------- Forecast view (model-driven) ---------------- */
+function viewForecast() {
+  $("viewSub").textContent = "AI predictive demand engine — Holt's method on live per-part history. Flags stockouts weeks ahead.";
+  $("viewActions").innerHTML = `<span class="chip">Model: Holt-Trend</span><span class="chip">Horizon 8wk</span><span class="chip">Live recompute</span>`;
+
+  // Rank every part by AI stockout risk
+  const ranked = STORE.parts
+    .map((p) => { const f = aiForecast(p.pn); const r = aiReorder(p.pn, f); return { p, r, f }; })
+    .sort((a, b) => b.r.riskScore - a.r.riskScore);
+
+  const riskCards = ranked.map(({ p, r }, i) => {
+    const cls = r.risk === "HIGH" ? "warn" : r.risk === "MEDIUM" ? "" : "ok";
+    const pill = r.risk === "HIGH" ? '<span class="tag danger">AOG RISK</span>'
+      : r.risk === "MEDIUM" ? '<span class="tag warnb">WATCH</span>'
+      : '<span class="tag ok">HEALTHY</span>';
+    return `<div class="kpi ${cls}"><div class="kpi-label">#${i + 1} · ${p.pn}</div><div class="kpi-value" style="font-size:22px">${r.risk}</div><div class="kpi-sub">${r.daysTo === null ? "no stockout in 8w" : "stockout ≈ " + r.daysTo + "d · order " + r.qty + " pcs"} ${pill}</div></div>`;
+  }).join("");
+
+  const top = ranked[0];
+  const part = top.p;
+  const hist = top.f.history.slice(-8);
+  const fc = top.f.forecast;
+
+  $("viewBody").innerHTML = `
+    <div class="kpi-grid">${riskCards}</div>
+    <div class="panel"><div class="panel-head"><div class="panel-title">Highest-risk part <span class="pn" style="font-size:13px">${part.pn}</span> — demand vs stock on hand <span class="dim">(recomputed from ${top.f.history.length} weeks)</span></div></div>
+      <div class="panel-body"><canvas id="chartPred" height="130"></canvas></div></div>
+    <div class="panel" style="margin-top:14px"><div class="panel-head"><div class="panel-title">AI reorder plan <span class="dim">auto-generated · risk-ordered</span></div></div>
+      <div class="panel-body">
+        ${ranked.filter((x) => x.r.risk !== "HEALTHY").map(({ p, r }) => `
+          <div class="reorder-row" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)">
+            <div><b><span class="pn">${p.pn}</span></b> &mdash; ${p.name}<br><small style="color:var(--dim)">${p.stock} on hand vs min ${p.min} · forecast ${Math.round(r.avgWk)}/wk · stockout ~<b style="color:var(--amber)">${r.daysTo === null ? ">8w" : r.daysTo + "d"}</b></small></div>
+            <div style="text-align:right"><span class="tag warnb">ORDER ${r.qty} PCS</span><br><small style="color:var(--dim)">$${(r.qty * p.unit).toLocaleString()}</small></div></div>`).join("")}
+        ${ranked.filter((x) => x.r.risk === "HEALTHY").length ? `<div class="empty" style="padding:14px">All other parts carry enough stock vs forecast.</div>` : ""}
+      </div></div>`;
+  try {
+    killChart("chartPred");
+    const labels = [...top.f.history.map((_, i) => "W" + (i - top.f.history.length + 1)), "+1", "+2", "+3", "+4", "+5", "+6", "+7", "+8"];
+    charts.chartPred = new Chart($("chartPred"), { type: "line", data: {
+      labels,
+      datasets: [
+        { label: "Demand (hist + forecast)", data: [...hist, ...fc], borderColor: "#f5b12d", backgroundColor: "rgba(245,177,45,0.10)", fill: true, tension: 0.35 },
+        { label: "Stock on hand (proj.)", data: top.f.stockProj, borderColor: "#3f9bff", tension: 0.35 },
+        { label: "Safety stock", data: top.f.safetyProj, borderColor: "#f04e4e", borderDash: [6,5], pointRadius: 0 }
+      ] }, options: baseOpts() });
+  } catch (err) { console.warn("Forecast chart skipped:", err); }
+}
+
+/* ---------------- Compliance ---------------- */
+function viewCompliance() {
+  $("viewSub").textContent = "Certificates, shelf-life controls and FOD evidence — EASA / FAA / CAA traceability.";
+  $("viewActions").innerHTML = `<span class="chip">Part 145 MEM</span><span class="chip">EASA · FAA · CAA</span>`;
+  $("viewBody").innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi warn"><div class="kpi-label">FOD Open Logs</div><div class="kpi-value">2</div><div class="kpi-sub">unreturned tools pending</div></div>
+      <div class="kpi"><div class="kpi-label">Certificates Valid</div><div class="kpi-value">98<span class="u">%</span></div><div class="kpi-sub">of 112 on file</div></div>
+      <div class="kpi"><div class="kpi-label">Shelf-Life Quarantines</div><div class="kpi-value">1</div><div class="kpi-sub">expiring batch held</div></div>
+      <div class="kpi"><div class="kpi-label">E-Release Signed</div><div class="kpi-value">23</div><div class="kpi-sub">this month, no paper</div></div>
+    </div>
+    <div class="grid" style="margin-bottom:14px">
+      <div class="panel"><div class="panel-head"><div class="panel-title">Shelf-life & certificates at risk</div></div>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Part</th><th>Batch</th><th>Expiry</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td><span class="pn">WHB-32-881</span></td><td>B-22044</td><td class="num">22 days</td><td><span class="tag warnb">QUARANTINE</span></td></tr>
+            <tr><td><span class="pn">SEAL-74-061</span></td><td>B-22193</td><td class="num">48 days</td><td><span class="tag info">FEFO QUEUE</span></td></tr>
+          </tbody>
+        </table></div></div>
+      <div class="panel"><div class="panel-head"><div class="panel-title">FOD control — open tool logs</div></div>
+        <div class="table-wrap"><table class="tbl">
+          <thead><tr><th>Tool</th><th>WO</th><th>Checked out</th><th>Idle</th></tr></thead>
+          <tbody>
+            <tr><td>Torque wrench TQ-18</td><td>WO-24518</td><td>2h ago</td><td><span class="tag danger">MISSING</span></td></tr>
+            <tr><td>Megger MT-4</td><td>WO-24505</td><td>5h ago</td><td><span class="tag warnb">UNRETURNED</span></td></tr>
+          </tbody>
+        </table></div></div>
+    </div>
+    <div class="panel"><div class="panel-head"><div class="panel-title">Recent legal e-releases <span class="dim">digitally signed, PKI-backed</span></div></div>
+      <div class="table-wrap"><table class="tbl">
+        <thead><tr><th>Ref</th><th>Part</th><th>Released to</th><th>Signatory</th><th>Certificate</th><th>Time</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pn">REL-3311</span></td><td>GST-304-88</td><td>WO-24497 / Z-WRH</td><td>K. Moyo (QP)</td><td>EASA F1 #E-20164</td><td>09:21</td></tr>
+          <tr><td><span class="pn">REL-3310</span></td><td>OIL-79-112</td><td>WO-24490 / Z-WQA</td><td>M. Chikumba</td><td>FAA 8130-3 #F-88093</td><td>08:55</td></tr>
+        </tbody>
+      </table></div></div>
+  `;
+}
+
+/* ---------------- Passport ---------------- */
+function viewPassport() {
+  $("viewSub").textContent = "Immutable chain-of-custody per serial number — verifiable by regulators and lessors.";
+  $("viewActions").innerHTML = `<button class="btn btn-accent" onclick="scanPassport()">&#10026; Scan New Serial</button>`;
+  const chain = [
+    ["OEM Manufacturing", "Safran Landing Systems · Rev 2", "0x3f9a12c401d7e88344bb01fa"],
+    ["Release to Service", "EASA Form 1 #E-88213", "0x77e4b1d205af64c9aa12c304"],
+    ["Airline Acceptance", "Air Zimbabwe Stores · Bin R2-B1", "0x33aa90e8f4412b07de5f1190"],
+    ["Line AOG Issue", "Issued WO-24518 · Z-WPV", "0x11c8d45f908ea232c9b022e1"],
+    ["Installation Proof", "Installed on Z-WPV · Signed K. Moyo", "0x05eba2117f003dd8704ccf2a"]
+  ];
+  $("viewBody").innerHTML = `
+    <div class="grid">
+      <div class="panel"><div class="panel-body">
+        <div class="passport-head"><div><div class="passport-sn">SERIAL BSC-64-73221-77412</div>
+          <div style="color:var(--dim);font-size:13px">Wheel & Brake Assembly · Batch B-22044</div></div>
+          <span class="verified">&#10003; VERIFIED · CHAIN INTACT</span></div>
+        <div class="hint" style="font-size:12px;color:var(--dim);margin-bottom:6px">5 ledger entries · Hyperledger Fabric · immutability proof present</div>
+        <div>${chain.map(([e, w, h], i) => `<div class="step ${i === chain.length - 1 ? "done" : "done"}"><div class="line"></div>
+          <div><b>${e}</b><br><span class="who">${w}</span><span class="hash">${h.slice(0, 24)}…</span></div></div>`).join("")}</div>
+      </div></div>
+      <div class="panel"><div class="panel-head"><div class="panel-title">Regulator / Lessor audit vault</div></div>
+        <div class="panel-body">
+          <div class="notif-item"><i class="n-dot" style="background:var(--green)"></i><div>Tamper seal intact — no records altered since OEM issue.<small>last verification: today 08:00</small></div></div>
+          <div class="notif-item"><i class="n-dot" style="background:var(--accent-2)"></i><div>Zero counterfeit risk — provenance rooted to OEM digital signature.<small>validate in 1 click</small></div></div>
+          <div class="notif-item"><i class="n-dot" style="background:var(--violet)"></i><div>Lessor read-access granted: AFJ / ZWL lessors.<small>audit export ready</small></div></div>
+        </div></div>
+    </div>`;
+}
+
+function scanPassport() {
+  toast("info", "Scanner active", "Scanning serial… BSC-64-73221. Passport verified — chain intact.");
+  route("#passport");
+}
+
+/* ---------------- Reports ---------------- */
+function viewReports() {
+  $("viewSub").textContent = "Executive analytics — spend, velocity, reliability and compliance posture.";
+  $("viewActions").innerHTML = `<button class="btn" onclick="exportReport()">&#8681; Export CSV</button>`;
+  $("viewBody").innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">MRO Spend (30d)</div><div class="kpi-value">$218<span class="u">K</span></div><div class="kpi-sub">&#8595; 12% vs AI forecast baseline</div></div>
+      <div class="kpi accent"><div class="kpi-label">AOG Cost Avoided</div><div class="kpi-value">$94<span class="u">K</span></div><div class="kpi-sub">predictive alerting this quarter</div></div>
+      <div class="kpi"><div class="kpi-label">Pick-to-Issue Time</div><div class="kpi-value">11<span class="u">m</span></div><div class="kpi-sub">down from 47m at go-live</div></div>
+      <div class="kpi"><div class="kpi-label">Inventory Accuracy</div><div class="kpi-value">99.2<span class="u">%</span></div><div class="kpi-sub">cycle-count reconciled</div></div>
+    </div>
+    <div class="grid">
+      ${panelChart("Monthly spend by ATA chapter", "chartSpend")}
+      ${panelChart("Fill-rate performance", "chartFill")}
+    </div>`;
+  try {
+    killChart("chartSpend");
+    charts.chartSpend = new Chart($("chartSpend"), { type: "bar", data: {
+      labels: ["Jan","Feb","Mar","Apr","May","Jun"],
+      datasets: [{ label: "Spend ($K)", data: [187, 164, 209, 198, 231, 218], backgroundColor: "#3f9bff", borderRadius: 6 }]
+    }, options: baseOpts({ labels: false }) });
+    killChart("chartFill");
+    charts.chartFill = new Chart($("chartFill"), { type: "line", data: {
+      labels: ["Jan","Feb","Mar","Apr","May","Jun"],
+      datasets: [
+        { label: "Fill rate %", data: [78, 83, 87, 91, 95, 97], borderColor: "#18c98d", tension: 0.35, fill: true, backgroundColor: "rgba(24,201,141,0.1)" },
+        { label: "Target", data: [95, 95, 95, 95, 95, 95], borderColor: "#8496b4", borderDash: [5,5], pointRadius: 0 }
+      ] }, options: baseOpts() });
+  } catch (err) { console.warn("Report charts skipped:", err); }
+}
+
+function exportReport() {
+  const csv = "Part,Stock,Min,Status\n" + STORE.parts.map((p) => `${p.pn},${p.stock},${p.min},${p.stock < p.min ? "REORDER" : "OK"}`).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "tslms_inventory_report.csv"; a.click();
+  toast("ok", "Report exported", "inventory_report.csv downloaded.");
+}
+
+/* ---------------- Live simulation loop ---------------- */
+function liveLoop() {
+  STORE.aog.forEach((a) => { a.t++; });
+  STORE.reqs.forEach((r) => { r.t++; });
+  $("clock").textContent = fmtTime(now());
+  if (location.hash === "#dashboard" && $("activityFeed")) $("activityFeed").innerHTML = activityFeedHTML();
+  if (location.hash === "#aog" && $("aogLog")) $("aogLog").innerHTML = activityFeedHTML();
+  const badge = $("aogBadge");
+  if (badge) badge.textContent = STORE.aog.filter((a) => a.step < 3).length;
+}
+
+setInterval(liveLoop, 1000);
+setInterval(flashNotif, 15000);
+
+/* ---------------- Login bindings ---------------- */
+document.querySelectorAll(".role-card").forEach((c) => {
+  c.addEventListener("click", () => {
+    document.querySelectorAll(".role-card").forEach((x) => x.classList.remove("active"));
+    c.classList.add("active");
+    $("loginUser").value = c.dataset.user;
+    $("loginPass").value = c.dataset.pass;
+    $("userErr").textContent = ""; $("passErr").textContent = "";
+  });
+});
+
+$("loginForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  doLogin($("loginUser").value.trim(), $("loginPass").value);
+});
+
+$("scanBtn").addEventListener("click", openScanner);
+
+$("logoutBtn").addEventListener("click", () => {
+  session = null;
+  $("app").classList.add("hidden");
+  $("loginScreen").classList.remove("hidden");
+  $("content").innerHTML = "";
+  location.hash = "";
+  toast("info", "Signed out", "Session ended securely.");
+});
+
+$("notifBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  const p = $("notifPanel");
+  p.classList.toggle("hidden");
+  if (!p.classList.contains("hidden")) { $("notifDot").style.opacity = "0"; renderNotifs(); }
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#notifPanel") && !e.target.closest("#notifBtn")) $("notifPanel").classList.add("hidden");
+});
+
+window.addEventListener("hashchange", () => route(location.hash));
+
+/* init clock */
+setInterval(() => { $("clock") && ($("clock").textContent = fmtTime(now())); }, 1000);
+
+/* debug / console handle for demos */
+if (typeof window !== "undefined") window.TSLMS = { STORE, get session() { return session; } };
