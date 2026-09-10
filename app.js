@@ -781,7 +781,7 @@ function setScanMode(mode) {
     $("scanManual").classList.add("hidden");
     $("scannerPane").innerHTML = `<div id="qrRegion" class="qr-region"><div class="empty" style="padding:70px 20px"><div class="e-ic">&#10052;</div>Starting camera…</div></div>
       <div class="scanner-help">Auto-decodes any barcode or QR in view. Works over <b>HTTPS</b> (GitHub Pages).</div>`;
-    startScanner();
+    bootCamera();
   } else if (mode === "ocr") {
     $("tabOcr").classList.add("btn-accent");
     $("scannerPane").classList.remove("hidden");
@@ -797,7 +797,7 @@ function setScanMode(mode) {
       <div class="scanner-help">AI OCR reads part numbers, serials and QR text directly off the printed label &mdash; no barcode required.</div>`;
     if (hasOcr) {
       $("snapBtn").addEventListener("click", snapshotOcr);
-      startScanner();
+      bootCamera();
     }
   } else if (mode === "super") {
     $("tabSuper").classList.add("btn-accent");
@@ -811,7 +811,7 @@ function setScanMode(mode) {
         <span class="ocr-status pulse" id="superStatus">${hasOcr ? "AI listening — decoder + OCR fusion active…" : "OCR engine missing — barcode-decoder only"}</span>
       </div>
       <div class="scanner-help">Super Scan AI runs the barcode decoder <b>and</b> grabs OCR snapshots from the same camera feed until a confident match &mdash; then shows both channels as evidence. ${hasOcr ? "" : " (load OCR via the AI OCR tab first)"}</div>`;
-    startScanner();
+    bootCamera();
     if (hasOcr) {
       clearInterval(superTimer);
       superTimer = setInterval(superOcrLoop, 4500);
@@ -824,6 +824,33 @@ function setScanMode(mode) {
     $("scanResult").innerHTML = "";
     setTimeout(() => $("scanInput") && $("scanInput").focus(), 60);
   }
+}
+
+let primedStream = null;
+
+/* getUserMedia on iOS Safari must be invoked inside the user's tap — if the
+   library defers it, capture is refused ("transient activation"). So we call
+   getUserMedia synchronously from the tap here and hand the already-granted
+   stream to html5-qrcode, which then never re-prompts or loses the gesture. */
+function getUserMediaPatch(stream) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+  const real = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  navigator.mediaDevices.getUserMedia = (constraints) => (stream && stream.active) ? Promise.resolve(stream) : real(constraints);
+}
+
+function bootCamera() {
+  stopScanner();
+  if (typeof Html5Qrcode === "undefined") { showCamError({ message: "Scanner library did not load — hard-refresh the page." }); return; }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showCamError({}); return; }
+  let req;
+  try { req = navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }); }
+  catch (e) { showCamError(e); return; }
+  req.then((stream) => {
+    if (primedStream) { try { primedStream.getTracks().forEach((t) => t.stop()); } catch (e) {} }
+    primedStream = stream;
+    getUserMediaPatch(stream);
+    startScanner();
+  }).catch((err) => showCamError(err));
 }
 
 function startScanner(cb) {
@@ -871,7 +898,7 @@ function showCamError(err) {
   const pane = $("scannerPane");
   if (pane) pane.innerHTML = `<div class="empty"><div class="e-ic">&#9888;</div><div style="max-width:330px;font-size:13px;line-height:1.6">${camFriendly(err)}</div>
     <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center">
-      <button class="btn btn-sm btn-accent" onclick="startScanner()">&#128247; Retry camera</button>
+      <button class="btn btn-sm btn-accent" onclick="bootCamera()">&#128247; Retry camera</button>
       <button class="btn btn-sm" onclick="setScanMode('man')">&#128221; Manual entry</button>
     </div></div>`;
   toast("warn", "Scanner", "Camera could not start — see message in scanner.");
