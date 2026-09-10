@@ -447,6 +447,30 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 }
 .scan-ev { display: flex; align-items: center; gap: 8px; font-size: 12.5px; flex-wrap: wrap; }
 
+/* --- Manufacturer & origin intelligence (2040 AI scan) --- */
+.co-card {
+  position: relative; overflow: hidden; margin-top: 10px;
+  border: 1px solid var(--line-2); border-radius: 12px;
+  background: linear-gradient(135deg, rgba(15, 30, 58, 0.92), rgba(8, 16, 34, 0.95));
+}
+.co-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent-2), #7a5af8); opacity: 0.9; }
+.co-card::after { content: ""; position: absolute; left: 0; width: 100%; height: 42px; background: linear-gradient(180deg, transparent, rgba(122, 90, 248, 0.10), transparent); animation: coScan 4.5s linear infinite; pointer-events: none; }
+@keyframes coScan { 0% { top: -46px; } 100% { top: calc(100% + 46px); } }
+.co-card.co-origin { background: linear-gradient(135deg, rgba(18, 32, 52, 0.92), rgba(8, 14, 26, 0.95)); padding-bottom: 4px; }
+.co-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; color: var(--accent-2); padding: 8px 12px; border-bottom: 1px dashed var(--line-2); flex-wrap: wrap; }
+.co-head span { color: var(--dim); font-weight: 600; letter-spacing: 0.3em; font-size: 10px; }
+.co-body { display: flex; align-items: center; gap: 12px; padding: 12px; }
+.co-crest { width: 46px; height: 46px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 13px; background: conic-gradient(from 210deg, #7a5af8, #22d3ee, #7a5af8); box-shadow: 0 0 18px rgba(122, 90, 248, 0.5); }
+.co-name { font-weight: 800; font-size: 14.5px; line-height: 1.25; }
+.co-meta { font-size: 11.5px; color: var(--dim); margin-top: 3px; }
+.co-seal { margin-left: auto; }
+.co-focus { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 12px 10px; }
+.co-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 11px; color: var(--dim); padding: 8px 12px; border-top: 1px dashed var(--line-2); flex-wrap: wrap; }
+.co-stars { color: #fcd34d; letter-spacing: 2px; }
+.co-parts { margin-top: 8px; border: 1px solid var(--line-2); border-radius: 10px; overflow: hidden; }
+.crow { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 7px 12px; border-top: 1px solid var(--line-2); flex-wrap: wrap; }
+.crow:first-child { border-top: none; }
+
 /* ============ RESPONSIVE ============ */
 .topbar-toggle { display: none; }
 

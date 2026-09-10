@@ -31,6 +31,11 @@ Professional, fully-interactive product simulation of an intelligent aviation te
   - Symbology of the decoded code is displayed (QR Code, Code 128, EAN-13, DataMatrix…)
 - **AI fuzzy matching engine** — corrected Levenshtein-based part resolution, guarded to PN-like codes: typos, OCR confusions and prose (`p/n BSC 64 73221 wheel brake`) resolve to the right part with an `AI MATCH` confidence badge, while payloads (GS1/JSON) are never mis-matched
 - **Smart actions** — after any scan: Issue part, Raise AOG, or Register new part, right from the result sheet
+- **Manufacturer & origin intelligence (2040 AI scan)** — every scan answers *"who makes this?"*:
+  - **OEM resolution** — all catalogue parts trace automatically to their maker (Sterling Brake Systems, Fenz Hydraulik, Qualitron Power, Turbex Engineering, NovaAvionics, AeroFlow Systems, Harlock Precision and more) via ATA/PN family rules, shown as a **🛰️ MANUFACTURER INTELLIGENCE // 2040 TERMINAL** card with verified-OEM seal, country flag, assurance rating, confidence and fleet supply rows
+  - **GS1 company-prefix database** — GTIN/EAN/UPC prefixes resolve to a registered maker; unknown codes fall back to an **ORIGIN TRACE** (country decoded from the real GS1 prefix table)
+  - **Label-declared detection** — AI reads the company name out of any code: QR-JSON payloads (`{"company":"Boeing"}`), GS1 free-text AIs, or plain OCR of a label (`Parker Hannifin`, `Airbus`, `Rolls-Royce`…) and builds a full company profile with their parts on hand
+  - Company names can be scanned or typed directly to open a maker profile
 - **AI Assistant** (`AI Assistant` in the side nav) — natural-language interface to the store:
   - **Real NLP intent engine** — understands "how much stock of brakes?", "forecast demand for pumps", "any AOG right now?", "order 2 GST-304-88 urgent", "issue 1 SEAL-74-061 to Z-WPV", "summary please"
   - **Live model output** — Holt's-trend demand forecasts with stockout-day estimates and anomaly flags, rendered inline

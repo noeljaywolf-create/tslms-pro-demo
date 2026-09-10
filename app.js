@@ -93,6 +93,86 @@ const CATALOG_EXTRAS = [
 ];
 STORE.parts.push(...CATALOG_EXTRAS);
 
+/* ============ MANUFACTURER & ORIGIN INTELLIGENCE (2040 AI SCAN) ============ */
+const FLAG = { "United States": "🇺🇸", "United Kingdom": "🇬🇧", "Germany": "🇩🇪", "France": "🇫🇷", "Japan": "🇯🇵", "Canada": "🇨🇦", "China": "🇨🇳", "India": "🇮🇳", "South Africa": "🇿🇦", "South Korea": "🇰🇷", "Australia": "🇦🇺", "European Union": "🇪🇺", "Italy": "🇮🇹", "Netherlands": "🇳🇱", "Brazil": "🇧🇷" };
+const flagOf = (c) => FLAG[c] || "🏳️";
+const COMPANY_DB = {
+  sterling: { key: "sterling", name: "Sterling Brake Systems Ltd", short: "SBS", country: "United Kingdom", focus: ["Landing gear", "Brakes", "Wheel assemblies"], verified: true, trust: 4.9, ref: "MM-UK/8821-ORG" },
+  fenz: { key: "fenz", name: "Fenz Hydraulik GmbH", short: "FHZ", country: "Germany", focus: ["Hydraulics", "Linear actuation", "Reservoirs"], verified: true, trust: 4.7, ref: "MM-DE/3310-ORG" },
+  qualitron: { key: "qualitron", name: "Qualitron Power Corp", short: "QPC", country: "United States", focus: ["Power generation", "Inverters", "Electrical distribution"], verified: true, trust: 4.8, ref: "MM-US/2077-ORG" },
+  aeroflow: { key: "aeroflow", name: "AeroFlow Systems Inc", short: "AFS", country: "United States", focus: ["Fuel systems", "Valves", "Flow regulation"], verified: true, trust: 4.6, ref: "MM-US/5540-ORG" },
+  nova: { key: "nova", name: "NovaAvionics", short: "NAV", country: "United States", focus: ["Avionics", "Sensors", "Flight instruments"], verified: true, trust: 4.8, ref: "MM-US/7788-ORG" },
+  turbex: { key: "turbex", name: "Turbex Engineering", short: "TEX", country: "United Kingdom", focus: ["Turbine modules", "Engine sections", "Ignition"], verified: true, trust: 4.9, ref: "MM-UK/4456-ORG" },
+  ventus: { key: "ventus", name: "Ventus Aerospace SA", short: "VAS", country: "France", focus: ["Pneumatics", "Environmental systems", "Fire & oxygen"], verified: true, trust: 4.5, ref: "MM-FR/6621-ORG" },
+  photon: { key: "photon", name: "Photon Air Lighting", short: "PAL", country: "Japan", focus: ["Lighting", "Signaling", "Cabin power"], verified: true, trust: 4.4, ref: "MM-JP/2210-ORG" },
+  harlok: { key: "harlok", name: "Harlock Precision Industries", short: "HPI", country: "United States", focus: ["Bearings", "Fasteners", "Precision mechanical"], verified: true, trust: 4.8, ref: "MM-US/1190-ORG" },
+  aeroint: { key: "aeroint", name: "CabinWorks Interiors", short: "CWI", country: "United Kingdom", focus: ["Cabins", "Doors", "Interior actuation"], verified: true, trust: 4.3, ref: "MM-UK/7730-ORG" },
+  aeronova: { key: "aeronova", name: "AeroNova Group", short: "ANO", country: "South Africa", focus: ["MRO distribution", "OEM partnership", "Compliance"], verified: true, trust: 4.2, distributor: true, ref: "MM-ZA/0001-DST" }
+};
+const ATA_MFR = { "21": "ventus", "22": "ventus", "24": "qualitron", "25": "aeroint", "26": "ventus", "27": "harlok", "28": "aeroflow", "29": "fenz", "30": "harlok", "31": "nova", "32": "sterling", "33": "photon", "34": "nova", "35": "ventus", "36": "ventus", "47": "nova", "49": "turbex", "51": "harlok", "53": "harlok", "55": "harlok", "56": "nova", "57": "nova", "72": "turbex", "73": "turbex", "74": "turbex", "75": "turbex", "76": "turbex", "77": "nova", "78": "turbex", "79": "turbex", "80": "turbex" };
+const MFR_HINTS = {
+  BSC: "sterling", BRK: "sterling", SFT: "sterling", HPS: "sterling", STR: "sterling", WLR: "sterling", WHB: "sterling", BTR: "sterling",
+  CSK: "harlok", TUE: "turbex", CMP: "turbex", IGN: "turbex", MAG: "turbex", THR: "turbex", OIL: "turbex", APU: "turbex",
+  ANLG: "nova", IND: "nova", TEM: "nova", QTY: "nova", NVL: "nova", RSE: "nova", SNS: "nova", RAD: "nova", PRB: "nova",
+  LGT: "photon", BUS: "photon", INV: "qualitron",
+  ALT: "qualitron", ELC: "qualitron", FUSE: "qualitron", GEN: "qualitron", RLY: "qualitron",
+  HYP: "fenz", SYR: "fenz", SPM: "fenz", RCP: "fenz",
+  PMP: "aeroflow", FFT: "aeroflow", FIL: "aeroflow", FLO: "aeroflow", VAL: "aeroflow", GST: "aeroflow",
+  CAB: "aeroint", CPR: "aeroint",
+  OXY: "ventus", CHK: "ventus", DET: "ventus", SOV: "ventus", FAN: "ventus", HTC: "ventus", CFG: "ventus", PHC: "ventus"
+};
+function mfrKeyForPart(p) { return MFR_HINTS[p.pn.slice(0, 3)] || MFR_HINTS[p.pn.slice(0, 2)] || ATA_MFR[p.ata] || "aeronova"; }
+const KNOWN_LABELS = {
+  "boeing": { key: "boeing", name: "The Boeing Company", short: "Boe", country: "United States", focus: ["Airframes", "Systems integration"], verified: true, trust: 5.0 },
+  "airbus": { key: "airbus", name: "Airbus SE", short: "AB", country: "European Union", focus: ["Airframes", "Programmes"], verified: true, trust: 5.0 },
+  "honeywell": { key: "honeywell", name: "Honeywell Aerospace", short: "HNW", country: "United States", focus: ["Avionics", "Bleed air", "APUs"], verified: true, trust: 4.9 },
+  "ge aviation": { key: "ge", name: "GE Aerospace", short: "GE", country: "United States", focus: ["Engines", "Power"], verified: true, trust: 5.0 },
+  "collins aerospace": { key: "collins", name: "Collins Aerospace (RTX)", short: "CLN", country: "United States", focus: ["Avionics", "Interiors", "Systems"], verified: true, trust: 4.9 },
+  "parker hannifin": { key: "parker", name: "Parker Hannifin Corp", short: "PH", country: "United States", focus: ["Hydraulics", "Fluid power"], verified: true, trust: 4.8 },
+  "parker": { key: "parker", name: "Parker Hannifin Corp", short: "PH", country: "United States", focus: ["Hydraulics", "Fluid power"], verified: true, trust: 4.8 },
+  "eaton": { key: "eaton", name: "Eaton Aerospace", short: "ETN", country: "United States", focus: ["Fluid power", "Actuation"], verified: true, trust: 4.7 },
+  "safran": { key: "safran", name: "Safran Group", short: "SFN", country: "France", focus: ["Propulsion", "Aircraft interiors", "Electronics"], verified: true, trust: 4.9 },
+  "thales": { key: "thales", name: "Thales", short: "THL", country: "France", focus: ["Electronics", "Defence & aerospace"], verified: true, trust: 4.8 },
+  "bombardier": { key: "bombardier", name: "Bombardier", short: "BBD", country: "Canada", focus: ["Business aircraft"], verified: true, trust: 4.7 },
+  "pratt whitney": { key: "pw", name: "Pratt & Whitney", short: "PW", country: "United States", focus: ["Engines", "Turbofans"], verified: true, trust: 5.0 },
+  "rolls royce": { key: "rr", name: "Rolls-Royce", short: "RR", country: "United Kingdom", focus: ["Engines", "Mission systems"], verified: true, trust: 5.0 },
+  "lockheed martin": { key: "lmt", name: "Lockheed Martin", short: "LM", country: "United States", focus: ["Airframes", "Defence"], verified: true, trust: 4.9 },
+  "textron": { key: "textron", name: "Textron Aviation", short: "TXT", country: "United States", focus: ["General aviation"], verified: true, trust: 4.6 },
+  "leonardo": { key: "leonardo", name: "Leonardo", short: "LDO", country: "Italy", focus: ["Helicopters", "Electronics"], verified: true, trust: 4.7 },
+  "diehl": { key: "diehl", name: "Diehl Aerospace", short: "DLH", country: "Germany", focus: ["Cabin systems", "Electronics"], verified: true, trust: 4.5 }
+};
+function findCompanyInText(text) {
+  const t = " " + low(String(text || "").replace(/[^\p{L}\p{N} ]/gu, " ").replace(/\s+/g, " ").trim()) + " ";
+  const hits = [];
+  for (const alias of Object.keys(KNOWN_LABELS)) if (t.includes(" " + alias + " ")) hits.push(KNOWN_LABELS[alias]);
+  return hits;
+}
+const COMPANY_GTIN = { "8901234": "sample-harlingen", "40012345": "sample-bavaria" };
+const COMPANY_SAMPLES = {
+  "sample-harlingen": { key: "sample-harlingen", name: "Harlingen Aero Components", short: "HAC", country: "India", focus: ["Aero components"], verified: false, trust: 3.1, sample: true },
+  "sample-bavaria": { key: "sample-bavaria", name: "BavariaFlo GmbH", short: "BFG", country: "Germany", focus: ["Fluid systems"], verified: false, trust: 3.3, sample: true }
+};
+function gtinCompany(digits) {
+  const d = String(digits || "").replace(/\D/g, "").replace(/^0(?=\d{13}$)/, "");
+  for (let L = 8; L >= 5; L--) {
+    const p = d.slice(0, L);
+    if (COMPANY_GTIN[p]) { const c = COMPANY_SAMPLES[COMPANY_GTIN[p]]; return { company: c, prefix: p, conf: 93 }; }
+  }
+  return null;
+}
+function companyIntelligence(raw, part, codeInfo) {
+  if (part && part.mfrKey) return { how: "OEM-RESOLUTION", company: COMPANY_DB[part.mfrKey] || COMPANY_DB.aeronova, conf: 100, prefix: null };
+  const fromText = findCompanyInText(raw);
+  if (fromText.length) return { how: "LABEL-DECLARED", company: fromText[0], conf: 95, prefix: null };
+  const pl = codeInfo && codeInfo.payload;
+  const gtin = pl && (pl["01"] || pl.gtin);
+  if (gtin) {
+    const g = gtinCompany(gtin);
+    if (g) return { how: "GS1-COMPANY-PREFIX", company: g.company, prefix: g.prefix, conf: g.conf, sample: true };
+    return { how: "ORIGIN-ONLY", origin: gtinRegion(String(gtin).replace(/^0(?=\d{13}$)/, "").slice(0, 3)), conf: 55, gtin: String(gtin) };
+  }
+  return null;
+}
 /* ============ UNSCANNED-CODE RESOLUTION INDEX ============ */
 /* Maps every plausible label variant of a part (PN with/without dashes,
    PN:/BAR:/SERIAL:/P/N prefixes, part-name aliases, numeric GTIN forms)
@@ -116,6 +196,7 @@ function buildIndex() {
     if (n && n.length >= 3 && !CODE_INDEX.has(n)) CODE_INDEX.set(n, p);
   };
   for (const p of STORE.parts) {
+    p.mfrKey = mfrKeyForPart(p);
     const n = norm(p.pn);
     reg(p.pn, p); reg(p.name, p); reg(n, p);
     reg("PN" + n, p); reg("P/N" + n, p); reg("BAR" + n, p);
@@ -184,6 +265,7 @@ function gtinRegion(digits) {
   }
   return "Unknown GS1 prefix";
 }
+
 const GS1_AI = {
   "00": "SSCC-18 shipment container", "01": "GTIN — trade item", "02": "GTIN of contained items",
   "10": "Batch / lot", "11": "Production date", "13": "Packaging date", "15": "Best-before date",
@@ -741,16 +823,16 @@ function analyzeCode(input, meta) {
 
   /* direct hit via the resolution index (PN variants, aliases, mapped GTIN…) */
   const mapped = (codeInfo && codeInfo.mapped) || indexLookup(raw);
-  if (mapped) return { status: "exact", part: mapped, confidence: 100, raw, candidates: [], text: "", codeInfo };
+  if (mapped) return { status: "exact", part: mapped, confidence: 100, raw, candidates: [], text: "", codeInfo, company: companyIntelligence(raw, mapped, codeInfo) };
 
   // exact
   const exact = parts.find((p) => low(p.pn) === low(raw));
-  if (exact) return { status: "exact", part: exact, confidence: 100, raw, candidates: [], text: "", codeInfo };
+  if (exact) return { status: "exact", part: exact, confidence: 100, raw, candidates: [], text: "", codeInfo, company: companyIntelligence(raw, exact, codeInfo) };
 
   // GS1 GTIN that is not ours — report the code itself
   const gtin = codeInfo && codeInfo.payload && (codeInfo.payload.gtin || codeInfo.payload["01"]);
   if (codeInfo && codeInfo.validGtin === true && gtin && !mapped) {
-    return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: nearest(raw) };
+    return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: nearest(raw), company: companyIntelligence(raw, null, codeInfo) };
   }
 
   // collect candidate tokens (whole string or extracted PN patterns) — fuzzy matching
@@ -769,10 +851,14 @@ function analyzeCode(input, meta) {
     }
   }
   if (best && best.conf >= 75) {
-    return { status: best.conf >= 92 ? "fuzzy" : "near", part: best.part, confidence: best.conf, raw, candidates: tail(raw), text: "", codeInfo };
+    return { status: best.conf >= 92 ? "fuzzy" : "near", part: best.part, confidence: best.conf, raw, candidates: tail(raw), text: "", codeInfo, company: companyIntelligence(raw, best.part, codeInfo) };
   }
   // alternatives sorted by distance
-  return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: nearest(raw) };
+  const co = companyIntelligence(raw, null, codeInfo);
+  if (co && co.how !== "ORIGIN-ONLY" && co.conf >= 90) {
+    return { status: "company", company: co, confidence: co.conf, raw, candidates: [], text: "", codeInfo, alternatives: nearest(raw) };
+  }
+  return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: nearest(raw), company: co };
 }
 
 function nearest(raw) {
@@ -796,8 +882,11 @@ function renderAnalysis(a, meta) {
     </div>`;
   const readout = codeReadout(a);
 
+  if (a.status === "company") {
+    return readout + companySheet(a.company);
+  }
   if (a.status === "exact") {
-    return readout + partSheet(a.part, 100) + openActs(a.part.pn);
+    return readout + partSheet(a.part, 100) + companyCard(a.company) + openActs(a.part.pn);
   }
   if (a.status === "fuzzy" || a.status === "near") {
     const p = a.part;
@@ -806,18 +895,55 @@ function renderAnalysis(a, meta) {
       <div style="font-weight:800;font-size:15px;margin-top:6px">${p.name}</div>
       <span class="pn">${p.pn}</span> &middot; ATA ${p.ata} &middot; Bin ${p.loc}</div>
       <div style="font-size:12px;color:var(--dim);margin-top:6px">Read <span class="pn">${esc(a.raw)}</span> — fuzzy-matched by intelligence engine ${a.confidence >= 92 ? "(near-perfect)" : "(low-confidence)"}. Verify against the physical label before issuing.</div>
-      ${partSheetMini(p)}${openActs(p.pn)}`;
+      ${partSheetMini(p)}${companyCard(a.company)}${openActs(p.pn)}`;
   }
   // none / alternatives
   const alts = (a.alternatives || []).map((x) => `
     <button class="btn btn-sm alt-pill" onclick="manualScan('${x.p.pn}')">${x.p.pn} <span style="opacity:.6">(${x.d})</span></button>`).join("");
-  return readout + `<div class="empty" style="padding:18px"><div class="e-ic">&#9888;</div>
+  return readout + companyCard(a.company) + `<div class="empty" style="padding:18px"><div class="e-ic">&#9888;</div>
     No exact part for <b>${esc(a.raw)}</b>.
     ${alts ? `<div style="margin-top:10px;font-size:12px;color:var(--dim)">Closest stocked parts:</div><div style="margin-top:6px">${alts}</div>` : ""}
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
       <button class="btn btn-sm btn-accent" onclick="actAog('${esc(a.raw)}')">Raise AOG</button>
       <button class="btn btn-sm" onclick="actRegister('${esc(a.raw)}')">Register new part</button>
     </div></div>`;
+}
+
+/* "2040" manufacturer / origin intelligence cards */
+function companyCard(co) {
+  if (!co) return "";
+  if (co.company) {
+    const c = co.company;
+    const stars = "★".repeat(Math.round(c.trust)) + "☆".repeat(5 - Math.round(c.trust));
+    const seal = c.verified ? '<span class="tag ok co-seal">✔ VERIFIED OEM</span>' : c.sample ? '<span class="tag warnb">SAMPLE REGISTRY</span>' : '<span class="tag warnb">DECLARED · UNVERIFIED</span>';
+    return `<div class="co-card">
+      <div class="co-head">🛰️ MANUFACTURER INTELLIGENCE <span>// 2040 TERMINAL</span></div>
+      <div class="co-body">
+        <div class="co-crest">${esc(c.short || c.name.slice(0, 3).toUpperCase())}</div>
+        <div>
+          <div class="co-name">${esc(c.name)}</div>
+          <div class="co-meta">${flagOf(c.country)} ${esc(c.country)} &middot; ${esc(co.how.replace(/-/g, " "))}${co.prefix ? ` &middot; GS1 prefix <span class="pn">${esc(co.prefix)}</span>` : ""}</div>
+        </div>
+        ${seal}
+      </div>
+      <div class="co-focus">${(c.focus || []).map((t) => `<span class="tag info">${esc(t)}</span>`).join(" ")}${c.distributor ? '<span class="tag violet">MRO DISTRIBUTOR</span>' : ""}</div>
+      <div class="co-foot"><span>assurance <b>${co.conf}%</b></span><span class="co-stars">${stars} ${c.trust.toFixed(1)}</span><span class="pn">${esc(c.ref || co.how + ":" + c.key)}</span></div>
+    </div>`;
+  }
+  /* origin-only trace for unknown external codes */
+  return `<div class="co-card co-origin">
+    <div class="co-head">🛰️ ORIGIN TRACE <span>// AI</span></div>
+    <div style="font-size:12.5px;line-height:1.6;padding:12px">Product origin traced to <b>${esc(co.origin)}</b>${co.gtin ? ` (GS1 prefix <span class="pn">${esc(co.gtin.replace(/^0(?=\d{13}$)/, "").slice(0, 3))}…</span>)` : ""}. Maker not in local registry — hold the label to the camera (AI OCR / Super Scan) or scan a GS1 / QR-JSON payload to identify the company.</div>
+  </div>`;
+}
+function companySheet(co) {
+  if (!co || !co.company) return "";
+  const c = co.company;
+  const rows = STORE.parts.filter((p) => p.mfrKey === c.key).slice(0, 6);
+  return companyCard(co) + `<div class="co-parts"><div style="font-weight:700;font-size:11.5px;letter-spacing:.06em;color:var(--dim);padding:10px 12px 4px">${rows.length ? `${rows.length} part${rows.length === 1 ? "" : "s"} matching this OEM in your fleet` : "No parts from this maker in your fleet"}</div>` +
+    rows.map((p) => `<div class="crow"><span class="pn">${p.pn}</span><b>${p.name}</b><span style="margin-left:auto;color:var(--dim)">${p.stock} pcs ${p.stock < p.min ? '<span class="tag danger">REORDER</span>' : ""}</span><button class="btn btn-sm" onclick="manualScan('${p.pn}')">Open</button></div>`).join("") +
+    (rows.length >= 6 ? `<div class="crow" style="opacity:.7">+ more in inventory &rarr; <button class="btn btn-sm" onclick="route('#inventory')">inventory</button></div>` : "") +
+    `</div>`;
 }
 
 /* "What does this code say" readout — GS1 AIs, GTIN checksum, prefix, payload fields */
@@ -851,12 +977,14 @@ function codeReadout(a) {
 
 function partSheet(p, conf) {
   const low = p.stock < p.min;
+  const mfr = COMPANY_DB[p.mfrKey] || null;
   return `<div style="margin-top:6px"><span class="tag ok">${typeof conf === "number" ? "EXACT " + conf + "%" : "VERIFIED"}</span>
     <div style="font-weight:800;font-size:15px;margin-top:6px">${p.name}</div>
     <span class="pn">${p.pn}</span> &middot; ATA ${p.ata} &middot; Bin ${p.loc}</div>
     ${p.desc ? `<div style="font-size:12.5px;color:var(--dim);margin:6px 0 2px">${p.desc}</div>` : ""}
     <div class="dl">
       <div><div class="k">Stock on hand</div><div class="v">${p.stock} pcs (min ${p.min}) ${low ? '<span class="tag danger">REORDER</span>' : '<span class="tag ok">HEALTHY</span>'}</div></div>
+      <div><div class="k">Manufacturer</div><div class="v">${mfr ? `${flagOf(mfr.country)} ${esc(mfr.name)} <span class="pn">${esc(mfr.short)}</span>` : "—"}</div></div>
       <div><div class="k">Release certificate</div><div class="v">${p.cert}</div></div>
       <div><div class="k">Shelf-life</div><div class="v">${p.life === "EXPIRING" ? '<span class="tag warnb">QUARANTINED</span>' : '<span class="tag info">VALID</span>'}</div></div>
       <div><div class="k">Blockchain passport</div><div class="v"><span class="pn">0x${(p.pn.split("").reduce((a, c) => a + c.charCodeAt(0), 0)).toString(16)}…</span></div></div>
@@ -892,7 +1020,7 @@ function actAog(pnVal) {
 
 function actRegister(pnVal) {
   if (STORE.parts.some((p) => p.pn === pnVal)) { toast("warn", "Already exists", pnVal + " is already registered."); return; }
-  STORE.parts.push({ pn: pnVal, name: "Newly registered part", ata: "00", stock: 0, min: 1, loc: "R3-B8", cert: "Cert pending", life: "OK", unit: 0 });
+  STORE.parts.push({ pn: pnVal, name: "Newly registered part", ata: "00", stock: 0, min: 1, loc: "R3-B8", cert: "Cert pending", life: "OK", unit: 0, mfrKey: mfrKeyForPart({ pn: pnVal, ata: "00" }) });
   toast("ok", "Part registered", pnVal + " added to inventory (0 stock, awaiting receipt).");
   pushEvent("info", "Registered", pnVal + " added to inventory", "info");
   closeModal();
@@ -925,7 +1053,7 @@ function handleScanCode(decoded, decodedResult) {
 function superAccum(src, decoded, decodedResult) {
   const f = decodedResult && decodedResult.result && decodedResult.result.format && (decodedResult.result.format.format || decodedResult.result.format.toString());
   const a = analyzeCode(decoded, { src, format: src === "barcode" ? (f || undefined) : "OCR" });
-  const conf = a.status === "exact" ? 100 : (a.part ? a.confidence : 0);
+  const conf = a.status === "exact" ? 100 : a.status === "company" ? a.confidence : (a.part ? a.confidence : 0);
   const pick = { a, src, raw: decoded, f, conf };
   if (src === "barcode") superBarcodePick = pick;
   if (src === "ocr") superOcrPick = pick;
@@ -938,7 +1066,7 @@ function superAccum(src, decoded, decodedResult) {
   }
   /* finalize: confident match, or any fully-decoded code report */
   const hasRealInfo = a.codeInfo && a.codeInfo.kind !== "Barcode / QR text";
-  if (a.status === "exact" || hasRealInfo || conf >= 82) return superFinalize(a, src, decoded, f);
+  if (a.status === "exact" || a.status === "company" || hasRealInfo || conf >= 82) return superFinalize(a, src, decoded, f);
   const r = $("scanResult");
   if (r && superBest) r.innerHTML = superPreview(superBest);
   return null;
@@ -955,13 +1083,14 @@ function superFinalize(a, src, raw, f) {
   const b = superBarcodePick, o = superOcrPick;
   superStateReset();
   stopScanner();
-  const verdict = a.status === "exact" ? "EXACT MATCH" : a.part ? "AI MATCH " + a.confidence + "%" : "CODE DECODED";
+  const verdict = a.status === "exact" ? "EXACT MATCH" : a.status === "company" ? "MAKER IDENTIFIED" : a.part ? "AI MATCH " + a.confidence + "%" : "CODE DECODED";
   const row = (label, p, cls) => p ? `<div class="scan-ev"><span class="tag ${cls}">${label}</span> <span class="pn">${esc(p.raw)}</span>${p.a.part ? ` <span class="tag ${p.a.status === "exact" ? "ok" : "warnb"}">${p.a.status === "exact" ? "EXACT" : p.a.confidence + "%"}</span>` : ""}</div>` : "";
   $("scanResult").innerHTML =
     `<div class="scan-kicker"><span class="tag violet">SUPER SCAN AI</span> <span class="tag ${a.status === "exact" ? "ok" : a.part ? "warnb" : "neutral"}">${verdict}</span> via ${src === "barcode" ? "blazing decoder" : "OCR snapshot"} &middot; <span class="pn">${esc(String(raw).slice(0, 40))}</span></div>` +
     `<div class="scan-evidence"><div style="font-size:11px;color:var(--dim);font-weight:700;letter-spacing:.06em">EVIDENCE — FUSED CHANNELS</div>${row("Decoder", b, "info")}${row("OCR", o, "violet")}</div>` +
     renderAnalysis(a, { src, format: src === "ocr" ? "OCR" : f });
   if (a.part) toast(a.status === "exact" ? "ok" : "info", "Super Scan AI", `${a.part.pn} resolved — ${a.status === "exact" ? "exact" : a.confidence + "% confidence"}.`);
+  else if (a.status === "company" && a.company && a.company.company) toast("info", "Super Scan AI", "Maker identified: " + a.company.company.name);
   else toast("warn", "Super Scan AI", "Code decoded — not in local catalogue.");
 }
 async function superOcrLoop() {
