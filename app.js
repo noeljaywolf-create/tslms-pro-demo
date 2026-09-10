@@ -162,6 +162,8 @@ function gtinCompany(digits) {
 }
 function companyIntelligence(raw, part, codeInfo) {
   if (part && part.mfrKey) return { how: "OEM-RESOLUTION", company: COMPANY_DB[part.mfrKey] || COMPANY_DB.aeronova, conf: 100, prefix: null };
+  const csm = codeInfo && codeInfo.consumer && codeInfo.consumer.product;
+  if (csm && RETAIL_DB[csm.mfr]) return { how: "RETAIL-RESOLUTION", company: RETAIL_DB[csm.mfr], conf: 92, prefix: null, sample: true, consumer: csm };
   const fromText = findCompanyInText(raw);
   if (fromText.length) return { how: "LABEL-DECLARED", company: fromText[0], conf: 95, prefix: null };
   const pl = codeInfo && codeInfo.payload;
@@ -291,7 +293,7 @@ function parseGS1(s) {
   return payload;
 }
 function gtinKind(digits) {
-  if (digits.length === 8) return "EAN-8";
+  if (digits.length === 8) return /^[01]\d{7}$/.test(digits) ? "UPC-E" : "EAN-8";
   if (digits.length === 12) return "UPC-A";
   if (digits.length === 13) return "EAN-13";
   if (digits.length === 14) return "GTIN-14 (ITF-14)";
@@ -305,6 +307,68 @@ function symName(fmt) {
     ITF: "ITF-14", MAXICODE: "MaxiCode", MANUAL: "Manual input", OCR: "OCR text"
   };
   return m[fmt] || (fmt ? String(fmt).toUpperCase().replace(/_/g, " ") : null);
+}
+
+/* ============ RETAIL / CONSUMER PRODUCT INTELLIGENCE ("ANY BARCODE") ============ */
+/* Sample consumer-goods registry so real-world barcodes (oil bottles, groceries,
+   toiletries…) resolve to a product + maker. Uses GS1 "restricted-distribution"
+   prefix 20 (safe for demo items) with valid check digits. */
+const RETAIL_DB = {
+  goldenfields: { key: "goldenfields", name: "GoldenFields Edible Oils", short: "GFE", country: "Zimbabwe", focus: ["Edible oils", "Fats"], verified: false, trust: 3.6, sample: true, ref: "RZ/2000/001" },
+  "olive-md": { key: "olive-md", name: "MareTre Olivari", short: "MTO", country: "Italy", focus: ["Olive oils"], verified: false, trust: 3.9, sample: true, ref: "RZ/2000/002" },
+  sunray: { key: "sunray", name: "SunRay Mills", short: "SRM", country: "Zimbabwe", focus: ["Soybean oils", "Maize"], verified: false, trust: 3.5, sample: true, ref: "RZ/2000/003" },
+  cleapure: { key: "cleapure", name: "CleaPure Consumer Brands", short: "CPB", country: "Zimbabwe", focus: ["Personal care", "Home goods"], verified: false, trust: 3.4, sample: true, ref: "RZ/2000/004" },
+  blueburst: { key: "blueburst", name: "BlueBurst Beverages", short: "BBV", country: "Zimbabwe", focus: ["Soft drinks", "Juices"], verified: false, trust: 3.5, sample: true, ref: "RZ/2000/005" },
+  aquavale: { key: "aquavale", name: "AquaVale Springs", short: "AVS", country: "Zimbabwe", focus: ["Mineral water"], verified: false, trust: 3.7, sample: true, ref: "RZ/2000/006" },
+  dairyhigh: { key: "dairyhigh", name: "DairyHigh Producers", short: "DHP", country: "Zimbabwe", focus: ["Dairy", "Margarine"], verified: false, trust: 3.6, sample: true, ref: "RZ/2000/007" },
+  nutrich: { key: "nutrich", name: "NutRich Foods", short: "NRF", country: "Zimbabwe", focus: ["Spreads", "Snacks"], verified: false, trust: 3.4, sample: true, ref: "RZ/2000/008" },
+  sugarc: { key: "sugarc", name: "SugArc Refineries", short: "SAR", country: "Zimbabwe", focus: ["Sugar", "Sweeteners"], verified: false, trust: 3.5, sample: true, ref: "RZ/2000/009" },
+  millgood: { key: "millgood", name: "MillGood Grains", short: "MGG", country: "Zimbabwe", focus: ["Maize meal", "Grains"], verified: false, trust: 3.6, sample: true, ref: "RZ/2000/010" },
+  trafoods: { key: "trafoods", name: "TRA Foods SA", short: "TRF", country: "South Africa", focus: ["Rice", "Pasta"], verified: false, trust: 3.5, sample: true, ref: "RZ/2000/011" },
+  saltline: { key: "saltline", name: "SaltLine Foods", short: "SLF", country: "Zimbabwe", focus: ["Salt", "Seasonings"], verified: false, trust: 3.3, sample: true, ref: "RZ/2000/012" },
+  sudzy: { key: "sudzy", name: "Sudzy Homecare", short: "SZY", country: "Zimbabwe", focus: ["Soap", "Detergents"], verified: false, trust: 3.4, sample: true, ref: "RZ/2000/013" }
+};
+const CONSUMER_ITEMS = [
+  ["Sunflower Cooking Oil 5L", "GoldenFields", "goldenfields", "Oils & Fats"],
+  ["Extra Virgin Olive Oil 1L", "MareTre", "olive-md", "Oils & Fats"],
+  ["Corn Oil 2L", "GoldenFields", "goldenfields", "Oils & Fats"],
+  ["Soybean Fine Oil 3L", "SunRay Mills", "sunray", "Oils & Fats"],
+  ["Cooking Oil 750ml", "CleaPure", "cleapure", "Oils & Fats"],
+  ["Sparkling Cola 330ml", "BlueBurst", "blueburst", "Beverages"],
+  ["Orange Juice 1L", "BlueBurst", "blueburst", "Beverages"],
+  ["Natural Spring Water 500ml", "AquaVale", "aquavale", "Beverages"],
+  ["Whole Milk 1L", "DairyHigh", "dairyhigh", "Dairy"],
+  ["Margarine 500g", "DairyHigh", "dairyhigh", "Dairy"],
+  ["Peanut Butter 400g", "NutRich", "nutrich", "Food"],
+  ["White Sugar 1kg", "SugArc", "sugarc", "Food"],
+  ["Maize Meal 10kg", "MillGood", "millgood", "Food"],
+  ["Rice 5kg", "TRA Foods", "trafoods", "Food"],
+  ["Cooking Salt 500g", "SaltLine", "saltline", "Food"],
+  ["Bath Soap 3-pack", "Sudzy", "sudzy", "Home Care"],
+  ["Shampoo 250ml", "CleaPure", "cleapure", "Personal Care"],
+  ["Hand Soap 500ml", "CleaPure", "cleapure", "Personal Care"]
+];
+const CONSUMER_DB = {};
+(function buildConsumerDb() {
+  CONSUMER_ITEMS.forEach((it, i) => {
+    const body = "2000" + String(i + 1).padStart(8, "0");
+    CONSUMER_DB[body + gtinCheckDigit(body)] = { name: it[0], brand: it[1], mfr: it[2], category: it[3] };
+  });
+})();
+function upcEexpand(u8) {
+  /* UPC-E (8-digit compact UPC-A) -> 12-digit UPC-A, per GS1/GTIN-12 conversion */
+  if (!/^\d{8}$/.test(u8)) return null;
+  const k = u8[6];
+  if (k <= "2") return u8.slice(0, 3) + k + "0000" + u8.slice(3, 6) + u8[7];
+  if (k === "3") return u8.slice(0, 4) + "00000" + u8.slice(4, 6) + u8[7];
+  if (k === "4") return u8.slice(0, 5) + "00000" + u8[5] + u8[7];
+  return u8.slice(0, 6) + "0000" + u8[6] + u8[7];
+}
+function consumerLookup(digits) {
+  const d = String(digits || "").replace(/\D/g, "");
+  const cands = [d, upcEexpand(d)].filter(Boolean);
+  for (const x of cands) if (CONSUMER_DB[x]) return { product: CONSUMER_DB[x], code: x };
+  return null;
 }
 const CODE_PREFIX = { "PN": "Part number label", "P/N": "Part number label", "BAR": "Barcode label", "SERIAL": "Serialised part tag", "SN": "Serial number tag", "AOG": "AOG request", "LOC": "Bin location code" };
 function inspectCode(raw, fmt) {
@@ -331,6 +395,7 @@ function inspectCode(raw, fmt) {
     info.validGtin = /^\d{14}$/.test(gtin) ? gtinCheckOk(gtin) : null;
     info.note = "GS1 Application Identifier barcode — decoded above";
     if (gtin) { const hit = indexLookup(gtin.slice(gtin.length === 14 ? 1 : 0)); if (hit) info.mapped = hit; }
+    if (gtin) { const c = consumerLookup(gtin.replace(/^0(?=\d{13}$)/, "")); if (c) info.consumer = c; }
     return info;
   }
   /* key:value prefix (PN:, BAR:, SERIAL:, SN:, AOG:, LOC:) */
@@ -348,13 +413,18 @@ function inspectCode(raw, fmt) {
   /* pure numeric EAN/UPC/GTIN */
   const digits = s.replace(/\s+/g, "");
   if (/^\d{8}$|^\d{12}$|^\d{13}$|^\d{14}$/.test(digits)) {
-    const vk = gtinCheckOk(digits);
+    const isUpce = /^\d{8}$/.test(digits) && /^[01]/.test(digits);
+    const upca8 = isUpce ? upcEexpand(digits) : null;
+    const vk = upca8 ? gtinCheckOk(upca8) : gtinCheckOk(digits);
     info.kind = gtinKind(digits);
     info.payload = { gtin: digits };
+    if (upca8) info.payload.upca = upca8;
     info.validGtin = vk;
-    info.note = `${gtinKind(digits)} retail/GTC code — check digit ${vk ? "VALID" : "INVALID"}, GS1 prefix ${gtinRegion(digits)}`;
+    info.note = `${gtinKind(digits)} retail/global code — check digit ${vk ? "VALID" : "INVALID"}, GS1 prefix ${gtinRegion(digits)}`;
     const hit = indexLookup(digits);
     if (hit) info.mapped = hit;
+    const c = consumerLookup(digits);
+    if (c) info.consumer = c;
     return info;
   }
   /* plain barcode text (PN or arbitrary) */
@@ -764,7 +834,11 @@ function startScanner(cb) {
     scanner = new Html5Qrcode("qrRegion");
     scanner.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: aiMode === "ocr" ? { width: 300, height: 220 } : { width: 240, height: 200 } },
+      {
+        fps: 10,
+        qrbox: aiMode === "ocr" ? { width: 300, height: 220 } : { width: 240, height: 200 },
+        formatsToSupport: [Html5Qrcode.SupportedFormats["QR_CODE"], Html5Qrcode.SupportedFormats["DATA_MATRIX"], Html5Qrcode.SupportedFormats["AZTEC"], Html5Qrcode.SupportedFormats["PDF_417"], Html5Qrcode.SupportedFormats["MAXICODE"], Html5Qrcode.SupportedFormats["CODE_128"], Html5Qrcode.SupportedFormats["CODE_39"], Html5Qrcode.SupportedFormats["CODE_93"], Html5Qrcode.SupportedFormats["CODABAR"], Html5Qrcode.SupportedFormats["ITF"], Html5Qrcode.SupportedFormats["UPC_A"], Html5Qrcode.SupportedFormats["UPC_E"], Html5Qrcode.SupportedFormats["EAN_8"], Html5Qrcode.SupportedFormats["EAN_13"]]
+      },
       (decoded, decodedResult) => {
         if (aiMode === "auto" || aiMode === "super") handleScanCode(decoded, decodedResult);
       },
@@ -832,7 +906,8 @@ function analyzeCode(input, meta) {
   // GS1 GTIN that is not ours — report the code itself
   const gtin = codeInfo && codeInfo.payload && (codeInfo.payload.gtin || codeInfo.payload["01"]);
   if (codeInfo && codeInfo.validGtin === true && gtin && !mapped) {
-    return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: nearest(raw), company: companyIntelligence(raw, null, codeInfo) };
+    const consumer = (codeInfo.consumer && codeInfo.consumer.product) || null;
+    return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: consumer ? [] : nearest(raw), company: companyIntelligence(raw, null, codeInfo), consumer };
   }
 
   // collect candidate tokens (whole string or extracted PN patterns) — fuzzy matching
@@ -858,7 +933,8 @@ function analyzeCode(input, meta) {
   if (co && co.how !== "ORIGIN-ONLY" && co.conf >= 90) {
     return { status: "company", company: co, confidence: co.conf, raw, candidates: [], text: "", codeInfo, alternatives: nearest(raw) };
   }
-  return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: nearest(raw), company: co };
+  const consumer = (codeInfo && codeInfo.consumer && codeInfo.consumer.product) || null;
+  return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: consumer ? [] : nearest(raw), company: co, consumer };
 }
 
 function nearest(raw) {
@@ -900,13 +976,36 @@ function renderAnalysis(a, meta) {
   // none / alternatives
   const alts = (a.alternatives || []).map((x) => `
     <button class="btn btn-sm alt-pill" onclick="manualScan('${x.p.pn}')">${x.p.pn} <span style="opacity:.6">(${x.d})</span></button>`).join("");
-  return readout + companyCard(a.company) + `<div class="empty" style="padding:18px"><div class="e-ic">&#9888;</div>
-    No exact part for <b>${esc(a.raw)}</b>.
-    ${alts ? `<div style="margin-top:10px;font-size:12px;color:var(--dim)">Closest stocked parts:</div><div style="margin-top:6px">${alts}</div>` : ""}
+  const note = a.consumer
+    ? `Decoded a retail / consumer product — not an aviation stores part.`
+    : `No exact part for <b>${esc(a.raw)}</b>.`;
+  return readout + companyCard(a.company) + (a.consumer ? consumerCard(a) : "") + `<div class="empty" style="padding:18px"><div class="e-ic">&#9888;</div>
+    ${note}
+    ${a.consumer ? "" : (alts ? `<div style="margin-top:10px;font-size:12px;color:var(--dim)">Closest stocked parts:</div><div style="margin-top:6px">${alts}</div>` : "")}
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
       <button class="btn btn-sm btn-accent" onclick="actAog('${esc(a.raw)}')">Raise AOG</button>
       <button class="btn btn-sm" onclick="actRegister('${esc(a.raw)}')">Register new part</button>
     </div></div>`;
+}
+
+/* retail/supermarket product card (oil bottles, groceries…) */
+function consumerCard(a) {
+  if (!a || !a.consumer) return "";
+  const p = a.consumer;
+  const codeStr = (a.codeInfo && a.codeInfo.payload && (a.codeInfo.payload.gtin || a.codeInfo.payload["01"])) || "";
+  return `<div class="co-card co-consumer">
+    <div class="co-head">🛒 PRODUCT INTELLIGENCE <span>// ANY BARCODE</span></div>
+    <div class="co-body">
+      <div class="co-crest co-retail">🛒</div>
+      <div>
+        <div class="co-name">${esc(p.name)}</div>
+        <div class="co-meta">${esc(p.brand)} &middot; ${esc(p.category)} &middot; origin ${esc((a.company && a.company.company ? flagOf(a.company.company.country) + " " + a.company.company.country : "traced"))}</div>
+      </div>
+      <span class="tag violet">RETAIL ITEM</span>
+    </div>
+    <div class="co-focus"><span class="tag warnb">SAMPLE REGISTRY</span><span class="tag info">GS1 item of ${esc(p.brand)}</span><span class="tag neutral">Valid GTIN</span></div>
+    <div class="co-foot"><span>registered retail product</span><span class="pn">GTIN ${codeStr ? esc(codeStr.slice(0, 14)) : "—"}</span><span class="co-stars">${"★".repeat(3)}${"☆".repeat(2)} 3.6</span></div>
+  </div>`;
 }
 
 /* "2040" manufacturer / origin intelligence cards */
@@ -933,7 +1032,7 @@ function companyCard(co) {
   /* origin-only trace for unknown external codes */
   return `<div class="co-card co-origin">
     <div class="co-head">🛰️ ORIGIN TRACE <span>// AI</span></div>
-    <div style="font-size:12.5px;line-height:1.6;padding:12px">Product origin traced to <b>${esc(co.origin)}</b>${co.gtin ? ` (GS1 prefix <span class="pn">${esc(co.gtin.replace(/^0(?=\d{13}$)/, "").slice(0, 3))}…</span>)` : ""}. Maker not in local registry — hold the label to the camera (AI OCR / Super Scan) or scan a GS1 / QR-JSON payload to identify the company.</div>
+    <div style="font-size:12.5px;line-height:1.6;padding:12px">Barcode <b>read successfully</b> — retail / global trade item, origin traced to <b>${esc(co.origin)}</b>${co.gtin ? ` (GS1 prefix <span class="pn">${esc(co.gtin.replace(/^0(?=\d{13}$)/, "").slice(0, 3))}…</span>)` : ""}. Maker not in local registry — hold the label to the camera (Super Scan AI) or scan a GS1 / QR-JSON payload to identify the company.</div>
   </div>`;
 }
 function companySheet(co) {
@@ -954,6 +1053,11 @@ function codeReadout(a) {
   const pl = c.payload || {};
   const lines = [];
   const fields = [];
+  if (c.consumer && c.consumer.product) {
+    const prv = c.consumer.product;
+    lines.push(`Product: <b>${esc(prv.name)}</b> — ${esc(prv.brand)} · ${esc(prv.category)}`);
+  }
+  if (pl.upca) lines.push(`Compact UPC-E expands to UPC-A <span class="pn">${esc(pl.upca)}</span>`);
   if (pl.gtin) {
     const valid = c.validGtin === true ? '<span class="tag ok">CHECK DIGIT OK</span>' : c.validGtin === false ? '<span class="tag danger">CHECK DIGIT INVALID</span>' : "";
     lines.push(`GTIN <span class="pn">${pl.gtin}</span> ${valid} — GS1 prefix: ${gtinRegion(String(pl.gtin))}`);

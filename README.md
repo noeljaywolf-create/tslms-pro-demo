@@ -36,6 +36,11 @@ Professional, fully-interactive product simulation of an intelligent aviation te
   - **GS1 company-prefix database** — GTIN/EAN/UPC prefixes resolve to a registered maker; unknown codes fall back to an **ORIGIN TRACE** (country decoded from the real GS1 prefix table)
   - **Label-declared detection** — AI reads the company name out of any code: QR-JSON payloads (`{"company":"Boeing"}`), GS1 free-text AIs, or plain OCR of a label (`Parker Hannifin`, `Airbus`, `Rolls-Royce`…) and builds a full company profile with their parts on hand
   - Company names can be scanned or typed directly to open a maker profile
+- **Retail & consumer-product intelligence — "reads any barcode, even an oil bottle"**:
+  - **14 symbologies** supported: QR, DataMatrix, Aztec, PDF417, MaxiCode, Code 128, Code 39, Code 93, Codabar, ITF, UPC-A, UPC-E, EAN-8, EAN-13
+  - Grocery, beverage, personal-care and home products (sunflower oil 5L, cola, spring water, milk, bath soap…) resolve to a **🛒 PRODUCT INTELLIGENCE // ANY BARCODE** card: product name, brand, category, GS1-validated GTIN, maker and origin — from a sample registry built on real GS1 restricted-distribution prefixes with valid check digits
+  - **UPC-E compact codes** are expanded to their full UPC-A form (GS1 conversion rules) before check-digit validation, so 8-digit retail barcodes validate correctly
+  - Retail scans clearly state *"Decoded a retail / consumer product — not an aviation stores part"* and show the maker profile instead of irrelevant aviation part suggestions; multi-channel **Super Scan AI** also resolves retail codes from OCR snapshots
 - **AI Assistant** (`AI Assistant` in the side nav) — natural-language interface to the store:
   - **Real NLP intent engine** — understands "how much stock of brakes?", "forecast demand for pumps", "any AOG right now?", "order 2 GST-304-88 urgent", "issue 1 SEAL-74-061 to Z-WPV", "summary please"
   - **Live model output** — Holt's-trend demand forecasts with stockout-day estimates and anomaly flags, rendered inline
