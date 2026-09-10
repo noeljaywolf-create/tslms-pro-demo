@@ -104,7 +104,7 @@ function aiReorder(pn, f) {
   else if (daysTo !== null && daysTo <= 21) { risk = "MEDIUM"; riskScore = 2; }
   else if (p.stock >= p.min) { risk = "HEALTHY"; riskScore = 0; }
   else { risk = "LOW"; riskScore = 1; }
-  const suggest = p.stock < p.min ? safetyGap + Math.ceil(avgWk * 2) : (risk === "MEDIUM" ? Math.ceil(avgWk * 2) : 0);
+  const suggest = p.stock < p.min ? safetyGap + Math.ceil(avgWk * 2) : (risk === "HIGH" || risk === "MEDIUM") ? Math.ceil(avgWk * 2) : 0;
   return { pn, risk, riskScore, daysTo, avgWk, qty: suggest };
 }
 

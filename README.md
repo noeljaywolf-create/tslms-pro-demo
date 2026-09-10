@@ -22,7 +22,13 @@ Professional, fully-interactive product simulation of an intelligent aviation te
   - **Smart Auto** — continuous barcode/QR decoding from camera (works over HTTPS on GitHub Pages)
   - **AI OCR** — Tesseract.js reads part numbers, serials and QR text straight off printed labels (no barcode needed), fuzzy-matched to inventory with a confidence score
   - **Manual entry** — smart lookup with nearest-part suggestions when no exact match exists
-- **AI fuzzy matching engine** — Levenshtein-based part resolution: typos, OCR confusions and prose (`p/n BSC 64 73221 wheel brake`) still resolve to the right part with an `AI MATCH` confidence badge
+- **Universal code decoding** — the scanner resolves any scanned/typed code to the exact item, and always tells you what the code itself says:
+  - **60+ part catalogue** with a resolution index: part numbers in any layout (`BSC-64-73221`, `BSC6473221`, lowercase), prefixed labels (`PN:…`, `P/N:…`, `BAR:…`, `SERIAL:…`), part names and shorthand aliases (`brake`, `pump`, `hub`…) all resolve to **EXACT 100%** part sheets
+  - **GS1-128 / AI barcodes** — `(01)GTIN (10)batch (21)serial (17)expiry…` are decoded field-by-field; the GTIN is validated and looked up
+  - **EAN-13 / UPC-A / EAN-8 / GTIN-14** — check-digit validation, GS1 prefix → country/region breakdown, and full readout even when the item isn't in the local catalogue (with closest parts, AOG or Register actions)
+  - **QR-JSON payloads** — structured data rendered as key/value fields and matched to inventory
+  - Symbology of the decoded code is displayed (QR Code, Code 128, EAN-13, DataMatrix…)
+- **AI fuzzy matching engine** — corrected Levenshtein-based part resolution, guarded to PN-like codes: typos, OCR confusions and prose (`p/n BSC 64 73221 wheel brake`) resolve to the right part with an `AI MATCH` confidence badge, while payloads (GS1/JSON) are never mis-matched
 - **Smart actions** — after any scan: Issue part, Raise AOG, or Register new part, right from the result sheet
 - **AI Assistant** (`AI Assistant` in the side nav) — natural-language interface to the store:
   - **Real NLP intent engine** — understands "how much stock of brakes?", "forecast demand for pumps", "any AOG right now?", "order 2 GST-304-88 urgent", "issue 1 SEAL-74-061 to Z-WPV", "summary please"

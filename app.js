@@ -40,6 +40,249 @@ const STORE = {
   events: []
 };
 
+/* Expanded catalogue — realistic aviation spares (existing 12 untouched) */
+const CATALOG_EXTRAS = [
+  { pn: "ACT-27-315", name: "Aileron Actuator", ata: "27", stock: 8, min: 4, loc: "R1-B1", cert: "EASA F1 #E-20177", life: "OK", unit: 480 },
+  { pn: "ALT-24-110", name: "AC Alternator", ata: "24", stock: 5, min: 3, loc: "R1-B2", cert: "FAA 8130-3 #F-99012", life: "OK", unit: 2600 },
+  { pn: "ANLG-31-205", name: "Mach / Airspeed Indicator", ata: "31", stock: 4, min: 2, loc: "R1-B9", cert: "CAA ZW #C-4471", life: "OK", unit: 1900 },
+  { pn: "BTR-29-504", name: "Brake Pressure Transducer", ata: "29", stock: 6, min: 3, loc: "R2-B3", cert: "EASA F1 #E-55511", life: "OK", unit: 340 },
+  { pn: "BRK-32-112", name: "Brake Disc (Carbon)", ata: "32", stock: 3, min: 6, loc: "R2-B1", cert: "FAA 8130-3 #F-21440", life: "OK", unit: 860 },
+  { pn: "BUS-33-222", name: "Wing Tip Lamp Assembly", ata: "33", stock: 14, min: 10, loc: "R2-B8", cert: "CAA ZW #C-3320", life: "OK", unit: 120 },
+  { pn: "CAB-25-118", name: "Lavatory Module Actuator", ata: "25", stock: 2, min: 2, loc: "R3-B5", cert: "EASA F1 #E-73014", life: "OK", unit: 1050 },
+  { pn: "CFG-21-409", name: "Air Cycle Machine", ata: "21", stock: 1, min: 1, loc: "R1-B12", cert: "EASA F1 #E-90122", life: "OK", unit: 14200 },
+  { pn: "CHK-36-121", name: "Check Valve", ata: "36", stock: 18, min: 10, loc: "R3-B7", cert: "FAA 8130-3 #F-11890", life: "OK", unit: 95 },
+  { pn: "CMP-72-220", name: "HP Compressor Blade", ata: "72", stock: 9, min: 6, loc: "R3-B2", cert: "EASA F1 #E-28841", life: "OK", unit: 640 },
+  { pn: "CPR-25-117", name: "Cockpit Door Latch", ata: "25", stock: 11, min: 6, loc: "R2-B5", cert: "CAA ZW #C-8810", life: "OK", unit: 240 },
+  { pn: "DET-36-112", name: "Thermal Detector", ata: "36", stock: 7, min: 4, loc: "R3-B4", cert: "FAA 8130-3 #F-55220", life: "OK", unit: 310 },
+  { pn: "ELC-24-205", name: "Static Inverter", ata: "24", stock: 3, min: 2, loc: "R1-B4", cert: "EASA F1 #E-64550", life: "OK", unit: 5200 },
+  { pn: "FAN-21-330", name: "Cooling Fan Drive", ata: "21", stock: 5, min: 3, loc: "R1-B11", cert: "FAA 8130-3 #F-33211", life: "OK", unit: 780 },
+  { pn: "FIL-28-410", name: "Main Fuel Filter", ata: "28", stock: 16, min: 12, loc: "R1-B8", cert: "CAA ZW #C-9907", life: "OK", unit: 140 },
+  { pn: "FLO-28-511", name: "Flow Regulator Valve", ata: "28", stock: 6, min: 4, loc: "R1-B7", cert: "EASA F1 #E-11203", life: "OK", unit: 420 },
+  { pn: "FUSE-24-311", name: "Generator Control Fuse", ata: "24", stock: 25, min: 15, loc: "R1-B6", cert: "FAA 8130-3 #F-40113", life: "OK", unit: 18 },
+  { pn: "GEN-24-405", name: "APU Generator", ata: "24", stock: 2, min: 1, loc: "R1-B3", cert: "EASA F1 #E-76098", life: "OK", unit: 9800 },
+  { pn: "HPS-32-118", name: "Nose Strut Seal Kit", ata: "32", stock: 4, min: 3, loc: "R2-B6", cert: "CAA ZW #C-5513", life: "OK", unit: 220 },
+  { pn: "HTC-21-750", name: "Pressurization Controller", ata: "21", stock: 5, min: 3, loc: "R1-B13", cert: "EASA F1 #E-33095", life: "OK", unit: 2900 },
+  { pn: "IGN-74-220", name: "Igniter Plug", ata: "74", stock: 12, min: 8, loc: "R2-B9", cert: "FAA 8130-3 #F-94015", life: "OK", unit: 180 },
+  { pn: "IND-31-118", name: "Fuel Quantity Indicator", ata: "31", stock: 4, min: 2, loc: "R1-B10", cert: "CAA ZW #C-1209", life: "OK", unit: 1450 },
+  { pn: "INV-33-330", name: "Cabin Lighting Inverter", ata: "33", stock: 9, min: 5, loc: "R2-B7", cert: "EASA F1 #E-84210", life: "OK", unit: 650 },
+  { pn: "LGT-33-211", name: "Taxi Light Assembly", ata: "33", stock: 6, min: 4, loc: "R2-B8", cert: "FAA 8130-3 #F-77105", life: "OK", unit: 330 },
+  { pn: "MAG-76-110", name: "Ignition Exciter", ata: "76", stock: 5, min: 3, loc: "R2-B11", cert: "EASA F1 #E-55124", life: "OK", unit: 1750 },
+  { pn: "NVL-57-110", name: "Navigation Light", ata: "57", stock: 8, min: 6, loc: "R2-B10", cert: "CAA ZW #C-6604", life: "OK", unit: 190 },
+  { pn: "NUT-51-118", name: "Spacer Bearing Set", ata: "51", stock: 30, min: 20, loc: "R2-B4", cert: "FAA 8130-3 #F-55241", life: "OK", unit: 45 },
+  { pn: "OIL-79-215", name: "Oil Cooler Fan", ata: "79", stock: 3, min: 2, loc: "R3-B6", cert: "EASA F1 #E-13305", life: "OK", unit: 3300 },
+  { pn: "OXY-35-110", name: "Oxygen Mask Regulator", ata: "35", stock: 9, min: 6, loc: "R3-B3", cert: "EASA F1 #E-40521", life: "OK", unit: 560 },
+  { pn: "PHC-26-115", name: "Fire Bottle Detector", ata: "26", stock: 5, min: 3, loc: "R2-B12", cert: "FAA 8130-3 #F-88440", life: "OK", unit: 990 },
+  { pn: "PRB-77-515", name: "EGT Thermocouple", ata: "77", stock: 7, min: 4, loc: "R3-B2", cert: "CAA ZW #C-7721", life: "OK", unit: 350 },
+  { pn: "RAD-34-105", name: "VOR / LOC Antenna", ata: "34", stock: 10, min: 6, loc: "R1-B14", cert: "EASA F1 #E-99551", life: "OK", unit: 520 },
+  { pn: "RCP-29-201", name: "Ram Air Turbine", ata: "29", stock: 1, min: 1, loc: "R1-B15", cert: "EASA F1 #E-67110", life: "OK", unit: 13400 },
+  { pn: "RLY-24-301", name: "Landing Gear Relay", ata: "24", stock: 15, min: 10, loc: "R1-B5", cert: "FAA 8130-3 #F-31002", life: "OK", unit: 120 },
+  { pn: "RSE-34-410", name: "Weather Radar Unit", ata: "34", stock: 2, min: 2, loc: "R1-B16", cert: "EASA F1 #E-20551", life: "OK", unit: 6400 },
+  { pn: "SFT-32-120", name: "Brake Cooling Fan", ata: "32", stock: 5, min: 3, loc: "R2-B13", cert: "FAA 8130-3 #F-66412", life: "OK", unit: 1180 },
+  { pn: "SNS-34-215", name: "TAWS Computer", ata: "34", stock: 3, min: 2, loc: "R1-B17", cert: "EASA F1 #E-77314", life: "OK", unit: 8900 },
+  { pn: "SOV-36-118", name: "Solenoid Valve", ata: "36", stock: 9, min: 6, loc: "R3-B5", cert: "CAA ZW #C-6208", life: "OK", unit: 210 },
+  { pn: "SPM-29-310", name: "Starter Valve Actuator", ata: "29", stock: 4, min: 3, loc: "R1-B18", cert: "FAA 8130-3 #F-99210", life: "OK", unit: 920 },
+  { pn: "STR-32-122", name: "Upper Pivot Pin", ata: "32", stock: 8, min: 5, loc: "R2-B14", cert: "CAA ZW #C-3299", life: "OK", unit: 260 },
+  { pn: "SYR-29-119", name: "Hydraulic Reservoir", ata: "29", stock: 3, min: 2, loc: "R1-B7", cert: "EASA F1 #E-44027", life: "OK", unit: 3400 },
+  { pn: "TEM-31-111", name: "Outside Air Temp Probe", ata: "31", stock: 6, min: 4, loc: "R1-B10", cert: "FAA 8130-3 #F-12088", life: "OK", unit: 180 },
+  { pn: "THR-78-112", name: "Thrust Reverser Latch", ata: "78", stock: 4, min: 3, loc: "R3-B8", cert: "EASA F1 #E-55409", life: "OK", unit: 640 },
+  { pn: "TUE-73-415", name: "Turbine Disc", ata: "73", stock: 2, min: 2, loc: "R3-B2", cert: "EASA F1 #E-65201", life: "OK", unit: 21000 },
+  { pn: "VAL-28-113", name: "Fuel Shutoff Valve", ata: "28", stock: 5, min: 4, loc: "R1-B8", cert: "CAA ZW #C-9090", life: "OK", unit: 2850 },
+  { pn: "WIN-30-116", name: "Windshield Wiper Motor", ata: "30", stock: 6, min: 4, loc: "R3-B7", cert: "FAA 8130-3 #F-44082", life: "OK", unit: 310 },
+  { pn: "WLR-32-118", name: "Main Wheel Assembly", ata: "32", stock: 2, min: 4, loc: "R1-B1", cert: "EASA F1 #E-91821", life: "OK", unit: 1450 },
+  { pn: "QTY-31-119", name: "Fuel Quantity Transmitter", ata: "31", stock: 7, min: 4, loc: "R1-B10", cert: "CAA ZW #C-8847", life: "OK", unit: 720 }
+];
+STORE.parts.push(...CATALOG_EXTRAS);
+
+/* ============ UNSCANNED-CODE RESOLUTION INDEX ============ */
+/* Maps every plausible label variant of a part (PN with/without dashes,
+   PN:/BAR:/SERIAL:/P/N prefixes, part-name aliases, numeric GTIN forms)
+   to that part, so any scanned code resolves to the exact item. */
+const CODE_INDEX = new Map();
+const ALIASES = {
+  brake: "BSC-64-73221", wheel: "BSC-64-73221", hydraulic: "HYP-100-2",
+  "fuel flow": "FFT-450-A", transmitter: "FFT-450-A", hub: "WHB-32-881",
+  seal: "SEAL-74-061", generator: "GEN-24-410", starter: "APU-49-300",
+  apu: "APU-49-300", bearing: "BRG-27-230", valve: "GST-304-88",
+  cooler: "OIL-79-112", pump: "PMP-28-92", boost: "PMP-28-92",
+  actuator: "ACT-27-315", alternator: "ALT-24-110", disc: "BRK-32-112",
+  filter: "FIL-28-410", inverter: "ELC-24-205", relay: "RLY-24-301",
+  oxygen: "OXY-35-110", regulator: "OXY-35-110", radar: "RSE-34-410",
+  oil: "OIL-79-215", igniter: "IGN-74-220", tyre: "WLR-32-118",
+  tire: "WLR-32-118", light: "LGT-33-211", navigation: "NVL-57-110"
+};
+function buildIndex() {
+  const reg = (k, p) => {
+    const n = norm(k);
+    if (n && n.length >= 3 && !CODE_INDEX.has(n)) CODE_INDEX.set(n, p);
+  };
+  for (const p of STORE.parts) {
+    const n = norm(p.pn);
+    reg(p.pn, p); reg(p.name, p); reg(n, p);
+    reg("PN" + n, p); reg("P/N" + n, p); reg("BAR" + n, p);
+    reg("SERIAL" + n, p); reg("SN" + n, p); reg("CHK" + n, p);
+    if (n.length > 3) reg(n.slice(0), p);
+    const digits = n.replace(/[^0-9]/g, "");
+    if (digits.length >= 6) {
+      [12, 13].forEach((len) => {
+        const p13 = digits.slice(0, Math.min(len - 1, digits.length)).padStart(len - 1, "0");
+        reg(p13 + gtinCheckDigit(p13), p);
+      });
+    }
+  }
+  for (const k of Object.keys(ALIASES)) { const p = STORE.parts.find((x) => x.pn === ALIASES[k]); if (p) reg(k, p); }
+}
+buildIndex();
+function indexLookup(text) { return CODE_INDEX.get(norm(text)) || null; }
+
+/* ---- GTIN / EAN-13 / UPC-A check digit ---- */
+function gtinCheckDigit(body) {
+  const d = String(body || "").replace(/\D/g, "");
+  let sum = 0;
+  for (let i = 0; i < d.length; i++) {
+    const fromRight = d.length - i;
+    sum += (+d[i]) * (fromRight % 2 === 1 ? 3 : 1);
+  }
+  return String((10 - (sum % 10)) % 10);
+}
+function gtinCheckOk(code) {
+  const d = String(code || "").replace(/\D/g, "");
+  if (!/^\d{8}$|^\d{12}$|^\d{13}$|^\d{14}$/.test(d)) return false;
+  return gtinCheckDigit(d.slice(0, -1)) === d.slice(-1);
+}
+const GS1_PREFIX = {
+  "00":"US & Canada","01":"US & Canada","02":"US & Canada","03":"US & Canada","04":"US & Canada",
+  "05":"US & Canada","06":"US & Canada","07":"US & Canada","08":"US & Canada","09":"US & Canada",
+  "20":"Restricted distribution","21":"Restricted distribution","22":"Restricted distribution",
+  "23":"Restricted distribution","24":"Restricted distribution","29":"Restricted distribution",
+  "30":"France","31":"France","32":"France","33":"France","34":"France","35":"France","36":"France","37":"France",
+  "400":"Germany","401":"Germany","404":"Germany","410":"Germany","414":"Germany","419":"Germany",
+  "45":"Japan","46":"Russia","471":"Taiwan","475":"Latvia","476":"Azerbaijan","484":"Moldova",
+  "485":"Armenia","529":"Cyprus","500":"UK","501":"UK","502":"UK","503":"UK","504":"UK","505":"UK","506":"UK","507":"UK","508":"UK","509":"UK",
+  "520":"Greece","527":"Lebanon","528":"Israel","530":"Albania","531":"North Macedonia",
+  "535":"Malta","539":"Ireland","540":"Belgium","541":"Belgium","542":"Belgium","543":"Belgium","544":"Belgium","545":"Belgium","546":"Belgium","547":"Belgium","548":"Belgium","549":"Belgium",
+  "560":"Portugal","569":"Iceland","570":"Denmark","590":"Poland","594":"Romania",
+  "599":"Hungary","600":"South Africa","601":"South Africa","609":"Mauritius","611":"Morocco",
+  "690":"China","691":"China","692":"China","693":"China","694":"China","695":"China","696":"China","697":"China","698":"China","699":"China",
+  "70":"Norway","729":"Argentina","730":"Sweden","731":"Sweden","732":"Sweden","733":"Sweden","734":"Sweden","735":"Sweden","736":"Sweden","737":"Sweden","738":"Sweden","739":"Sweden",
+  "740":"Guatemala","741":"El Salvador","742":"Honduras","743":"Nicaragua","744":"Costa Rica",
+  "745":"Panama","746":"Dominican Republic","750":"Mexico","754":"Canada","755":"Canada",
+  "759":"Venezuela","760":"Switzerland","761":"Switzerland","762":"Switzerland","763":"Switzerland","764":"Switzerland","765":"Switzerland","766":"Switzerland","767":"Switzerland","768":"Switzerland","769":"Switzerland",
+  "770":"Colombia","773":"Uruguay","775":"Peru","777":"Bolivia","779":"Argentina","780":"Chile",
+  "784":"Paraguay","785":"Peru","786":"Ecuador","789":"Brazil","790":"Brazil","791":"Brazil",
+  "800":"Italy","801":"Italy","802":"Italy","803":"Italy","804":"Italy","805":"Italy","806":"Italy","807":"Italy","808":"Italy","809":"Italy",
+  "810":"Italy","840":"Spain","850":"Cuba","858":"Slovakia","859":"Czech Republic","860":"Serbia",
+  "868":"Turkey","869":"Turkey","870":"Netherlands","871":"Netherlands","872":"Netherlands","873":"Netherlands","874":"Netherlands","875":"Netherlands","876":"Netherlands","877":"Netherlands","878":"Netherlands","879":"Netherlands",
+  "880":"South Korea","885":"Thailand","888":"Singapore","890":"India","893":"Vietnam",
+  "899":"Indonesia","90":"Austria","91":"Austria","93":"Australia","94":"New Zealand",
+  "955":"Malaysia","958":"Macau","977":"Periodicals (ISSN)","978":"Books (ISBN)","979":"Books (ISBN)","980":"Refunds","99":"Coupons"
+};
+function gtinRegion(digits) {
+  if (!digits) return "U.S. & Canada (UPC default)";
+  for (let L = 3; L >= 1; L--) {
+    const key = digits.slice(0, L);
+    if (GS1_PREFIX[key]) return GS1_PREFIX[key];
+  }
+  return "Unknown GS1 prefix";
+}
+const GS1_AI = {
+  "00": "SSCC-18 shipment container", "01": "GTIN — trade item", "02": "GTIN of contained items",
+  "10": "Batch / lot", "11": "Production date", "13": "Packaging date", "15": "Best-before date",
+  "17": "Expiry date", "21": "Serial number (SGTIN)", "30": "Variable quantity",
+  "37": "Number of units", "240": "Additional item reference", "241": "Customer part number",
+  "250": "Secondary serial", "400": "Purchase order number", "90": "Mutually-defined data",
+  "91": "Mutually-defined", "92": "Mutually-defined"
+};
+function fmtGS1Date(yymmdd) {
+  const m = String(yymmdd || "").match(/^(\d{2})(\d{2})(\d{2})$/);
+  if (!m) return String(yymmdd || "");
+  return `${m[3]}/${m[2]}/${m[1]}`;
+}
+function parseGS1(s) {
+  const groups = [...String(s).matchAll(/\((\d{2,4})\)([^()]+)/g)];
+  if (!groups.length) return null;
+  const payload = {};
+  for (const g of groups) {
+    const ai = g[1], val = g[2];
+    payload[ai] = val;
+    if (/^(11|13|15|17)$/.test(ai)) payload[ai + "Label"] = fmtGS1Date(val);
+  }
+  return payload;
+}
+function gtinKind(digits) {
+  if (digits.length === 8) return "EAN-8";
+  if (digits.length === 12) return "UPC-A";
+  if (digits.length === 13) return "EAN-13";
+  if (digits.length === 14) return "GTIN-14 (ITF-14)";
+  return null;
+}
+function symName(fmt) {
+  const m = {
+    QR_CODE: "QR Code", DATA_MATRIX: "DataMatrix", PDF_417: "PDF417", AZTEC: "Aztec",
+    CODE_128: "Code 128", CODE_39: "Code 39", CODE_93: "Code 93", CODABAR: "Codabar",
+    EAN_13: "EAN-13", EAN_8: "EAN-8", UPC_A: "UPC-A", UPC_E: "UPC-E",
+    ITF: "ITF-14", MAXICODE: "MaxiCode", MANUAL: "Manual input", OCR: "OCR text"
+  };
+  return m[fmt] || (fmt ? String(fmt).toUpperCase().replace(/_/g, " ") : null);
+}
+const CODE_PREFIX = { "PN": "Part number label", "P/N": "Part number label", "BAR": "Barcode label", "SERIAL": "Serialised part tag", "SN": "Serial number tag", "AOG": "AOG request", "LOC": "Bin location code" };
+function inspectCode(raw, fmt) {
+  const s = String(raw || "").trim();
+  if (!s) return null;
+  const sym = symName(fmt);
+  const info = { sym };
+  /* structured QR/JSON payload */
+  if (/^\{/.test(s)) {
+    try {
+      const o = JSON.parse(s);
+      info.kind = "QR-JSON payload";
+      info.payload = o;
+      info.note = "Machine-readable structured payload";
+      return info;
+    } catch (e) { /* fall through */ }
+  }
+  /* GS1-128 Application Identifiers */
+  const gs = parseGS1(s);
+  if (gs) {
+    info.kind = "GS1-128";
+    info.payload = gs;
+    const gtin = gs["01"] || "";
+    info.validGtin = /^\d{14}$/.test(gtin) ? gtinCheckOk(gtin) : null;
+    info.note = "GS1 Application Identifier barcode — decoded above";
+    if (gtin) { const hit = indexLookup(gtin.slice(gtin.length === 14 ? 1 : 0)); if (hit) info.mapped = hit; }
+    return info;
+  }
+  /* key:value prefix (PN:, BAR:, SERIAL:, SN:, AOG:, LOC:) */
+  const pm = s.match(/^(P\/?N|SERIAL|SN|BAR|AOG|LOC):\s*(.+)$/i);
+  if (pm) {
+    const key = pm[1].toUpperCase();
+    info.kind = CODE_PREFIX[key] || key + " payload";
+    info.payload = { [key]: pm[2] };
+    info.key = key;
+    info.note = info.kind;
+    const hit = indexLookup(pm[2]);
+    if (hit) info.mapped = hit;
+    return info;
+  }
+  /* pure numeric EAN/UPC/GTIN */
+  const digits = s.replace(/\s+/g, "");
+  if (/^\d{8}$|^\d{12}$|^\d{13}$|^\d{14}$/.test(digits)) {
+    const vk = gtinCheckOk(digits);
+    info.kind = gtinKind(digits);
+    info.payload = { gtin: digits };
+    info.validGtin = vk;
+    info.note = `${gtinKind(digits)} retail/GTC code — check digit ${vk ? "VALID" : "INVALID"}, GS1 prefix ${gtinRegion(digits)}`;
+    const hit = indexLookup(digits);
+    if (hit) info.mapped = hit;
+    return info;
+  }
+  /* plain barcode text (PN or arbitrary) */
+  if (sym) {
+    info.kind = "Barcode / QR text";
+    info.note = null;
+  }
+  return info.kind ? info : null;
+}
+
 /* Seed requisitions + AOG queue */
 function seedData() {
   const base = [
@@ -346,7 +589,7 @@ function openScanner() {
     <div class="modal-backdrop" onclick="closeModal(event)">
       <div class="modal modal-scanner modal-xl" onclick="event.stopPropagation()">
         <div class="modal-head">
-          <div><div class="modal-title">Intelligent Scanner</div><div class="scan-subtitle">AI vision · barcode · fuzzy part matching</div></div>
+          <div><div class="modal-title">Intelligent Scanner</div><div class="scan-subtitle">any code · GS1-128 · EAN/UPC · QR · fuzzy part matching</div></div>
           <button class="modal-x" onclick="closeModal(event)">&#10005;</button>
         </div>
         <div class="modal-body">
@@ -420,8 +663,8 @@ function startScanner(cb) {
     scanner.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: aiMode === "ocr" ? { width: 300, height: 220 } : { width: 240, height: 200 } },
-      (decoded) => {
-        if (aiMode === "auto") handleScanCode(decoded);
+      (decoded, decodedResult) => {
+        if (aiMode === "auto") handleScanCode(decoded, decodedResult);
       },
       () => {}
     ).catch(() => showScanMsg("Camera unavailable — use Manual entry instead.", true));
@@ -451,7 +694,12 @@ function low(s) { return String(s || "").toLowerCase(); }
 function lev(a, b) {
   const m = a.length, n = b.length;
   if (!m) return n; if (!n) return m;
-  const d = Array.from({ length: m + 1 }, (_, i) => i ? new Array(n + 1).fill(0) : Array.from({ length: n + 1 }, (_, j) => j));
+  const d = [];
+  for (let i = 0; i <= m; i++) {
+    d[i] = new Array(n + 1).fill(0);
+    d[i][0] = i;
+    if (i === 0) for (let j = 0; j <= n; j++) d[0][j] = j;
+  }
   for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
     const c = a[i - 1] === b[j - 1] ? 0 : 1;
     d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
@@ -465,15 +713,29 @@ function extractPN(text) {
   return (t.match(re) || []).map((x) => x.replace(/\s+/g, "-"));
 }
 
-function analyzeCode(input) {
+function analyzeCode(input, meta) {
   const raw = String(input || "").trim();
   const parts = STORE.parts;
+  const codeInfo = inspectCode(raw, meta && meta.format) || (meta && meta.format ? { sym: symName(meta.format), kind: "Barcode / QR text", note: null } : null);
+
+  /* direct hit via the resolution index (PN variants, aliases, mapped GTIN…) */
+  const mapped = (codeInfo && codeInfo.mapped) || indexLookup(raw);
+  if (mapped) return { status: "exact", part: mapped, confidence: 100, raw, candidates: [], text: "", codeInfo };
+
   // exact
   const exact = parts.find((p) => low(p.pn) === low(raw));
-  if (exact) return { status: "exact", part: exact, confidence: 100, raw, candidates: [], text: "" };
+  if (exact) return { status: "exact", part: exact, confidence: 100, raw, candidates: [], text: "", codeInfo };
 
-  // collect candidate tokens (whole string or extracted PN patterns)
-  const tokens = [...new Set([raw, ...extractPN(raw)])];
+  // GS1 GTIN that is not ours — report the code itself
+  const gtin = codeInfo && codeInfo.payload && (codeInfo.payload.gtin || codeInfo.payload["01"]);
+  if (codeInfo && codeInfo.validGtin === true && gtin && !mapped) {
+    return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: nearest(raw) };
+  }
+
+  // collect candidate tokens (whole string or extracted PN patterns) — fuzzy matching
+  // is restricted to short PN-like codes so payloads (GS1/JSON/prose) can't mis-match
+  const lookPN = (t) => { const n = norm(t); return n.length >= 3 && n.length <= 20 && /[A-Z]/.test(n) && /\d/.test(n); };
+  const tokens = [...new Set([raw, ...extractPN(raw)])].filter(lookPN);
   let best = null;
   for (const t of tokens) {
     const tn = norm(t);
@@ -486,11 +748,14 @@ function analyzeCode(input) {
     }
   }
   if (best && best.conf >= 75) {
-    return { status: best.conf >= 92 ? "fuzzy" : "near", part: best.part, confidence: best.conf, raw, candidates: tail(raw), text: "" };
+    return { status: best.conf >= 92 ? "fuzzy" : "near", part: best.part, confidence: best.conf, raw, candidates: tail(raw), text: "", codeInfo };
   }
   // alternatives sorted by distance
-  const alt = parts.map((p) => ({ p, d: lev(norm(raw), norm(p.pn)) })).sort((a, b) => a.d - b.d).slice(0, 4);
-  return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", alternatives: alt };
+  return { status: "none", part: null, confidence: 0, raw, candidates: tail(raw), text: "", codeInfo, alternatives: nearest(raw) };
+}
+
+function nearest(raw) {
+  return STORE.parts.map((p) => ({ p, d: lev(norm(raw), norm(p.pn)) })).sort((a, b) => a.d - b.d).slice(0, 4);
 }
 
 function tail(raw) {
@@ -508,14 +773,15 @@ function renderAnalysis(a, meta) {
       <button class="btn btn-sm" onclick="actAog('${pn}')">Raise AOG</button>
       <button class="btn btn-sm" onclick="route('#passport')">Passport</button>
     </div>`;
+  const readout = codeReadout(a);
 
   if (a.status === "exact") {
-    return partSheet(a.part, 100) + openActs(a.part.pn);
+    return readout + partSheet(a.part, 100) + openActs(a.part.pn);
   }
   if (a.status === "fuzzy" || a.status === "near") {
     const p = a.part;
     const cls = a.confidence >= 92 ? "tag ok" : a.confidence >= 82 ? "tag info" : "tag warnb";
-    return `<div style="margin-top:6px"><span class="tag ${cls}">AI MATCH ${a.confidence}%</span>
+    return readout + `<div style="margin-top:6px"><span class="tag ${cls}">AI MATCH ${a.confidence}%</span>
       <div style="font-weight:800;font-size:15px;margin-top:6px">${p.name}</div>
       <span class="pn">${p.pn}</span> &middot; ATA ${p.ata} &middot; Bin ${p.loc}</div>
       <div style="font-size:12px;color:var(--dim);margin-top:6px">Read <span class="pn">${esc(a.raw)}</span> — fuzzy-matched by intelligence engine ${a.confidence >= 92 ? "(near-perfect)" : "(low-confidence)"}. Verify against the physical label before issuing.</div>
@@ -524,7 +790,7 @@ function renderAnalysis(a, meta) {
   // none / alternatives
   const alts = (a.alternatives || []).map((x) => `
     <button class="btn btn-sm alt-pill" onclick="manualScan('${x.p.pn}')">${x.p.pn} <span style="opacity:.6">(${x.d})</span></button>`).join("");
-  return `<div class="empty" style="padding:18px"><div class="e-ic">&#9888;</div>
+  return readout + `<div class="empty" style="padding:18px"><div class="e-ic">&#9888;</div>
     No exact part for <b>${esc(a.raw)}</b>.
     ${alts ? `<div style="margin-top:10px;font-size:12px;color:var(--dim)">Closest stocked parts:</div><div style="margin-top:6px">${alts}</div>` : ""}
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
@@ -533,11 +799,41 @@ function renderAnalysis(a, meta) {
     </div></div>`;
 }
 
+/* "What does this code say" readout — GS1 AIs, GTIN checksum, prefix, payload fields */
+function codeReadout(a) {
+  const c = a && a.codeInfo;
+  if (!c) return "";
+  const chips = [c.sym, c.kind].filter(Boolean).map((x) => `<span class="tag ${c.kind === "GS1-128" ? "violet" : c.validGtin === true ? "ok" : c.validGtin === false ? "danger" : "info"}">${esc(x)}</span>`).join(" ");
+  const pl = c.payload || {};
+  const lines = [];
+  const fields = [];
+  if (pl.gtin) {
+    const valid = c.validGtin === true ? '<span class="tag ok">CHECK DIGIT OK</span>' : c.validGtin === false ? '<span class="tag danger">CHECK DIGIT INVALID</span>' : "";
+    lines.push(`GTIN <span class="pn">${pl.gtin}</span> ${valid} — GS1 prefix: ${gtinRegion(String(pl.gtin))}`);
+  }
+  if (pl["01"]) {
+    const validT = c.validGtin === true ? '<span class="tag ok">VALID GTIN</span>' : c.validGtin === false ? '<span class="tag danger">BAD CHECK DIGIT</span>' : "";
+    lines.push(`Application Identifier 01 — GTIN <span class="pn">${pl["01"]}</span> ${validT}`);
+  }
+  [["10","Batch / lot"],["21","S/N"],["37","Qty"],["30","Qty"],["400","PO"],["241","Customer PN"]].forEach(([ai, lab]) => {
+    if (pl[ai]) lines.push(`${lab}: <b>${esc(pl[ai])}</b>`);
+  });
+  [["11","Prod"],["13","Pack"],["15","Best-before"],["17","Expiry"]].forEach(([ai, lab]) => {
+    if (pl[ai]) lines.push(`${lab}: <b>${esc(pl[ai + "Label"] || pl[ai])}</b>`);
+  });
+  if (pl.gtin === undefined && pl["01"] === undefined && c.payload && c.kind === "QR-JSON payload") {
+    Object.keys(pl).forEach((k) => fields.push(`<div><span class="ai-k">${esc(k)}</span><b>${esc(String(pl[k]))}</b></div>`));
+  }
+  if (!lines.length && !fields.length && c.note) lines.push(esc(`${c.note}${c.kind === "Part number label" ? " — part resolved from label" : ""}`));
+  return `<div class="ocr-raw readout">${chips ? `<div style="margin-bottom:6px">${chips}</div>` : ""}${lines.map((l) => `<div style="margin:2px 0">${l}</div>`).join("")}${fields.length ? `<div class="ai-prop-grid">${fields.join("")}</div>` : ""}</div>`;
+}
+
 function partSheet(p, conf) {
   const low = p.stock < p.min;
   return `<div style="margin-top:6px"><span class="tag ok">${typeof conf === "number" ? "EXACT " + conf + "%" : "VERIFIED"}</span>
     <div style="font-weight:800;font-size:15px;margin-top:6px">${p.name}</div>
     <span class="pn">${p.pn}</span> &middot; ATA ${p.ata} &middot; Bin ${p.loc}</div>
+    ${p.desc ? `<div style="font-size:12.5px;color:var(--dim);margin:6px 0 2px">${p.desc}</div>` : ""}
     <div class="dl">
       <div><div class="k">Stock on hand</div><div class="v">${p.stock} pcs (min ${p.min}) ${low ? '<span class="tag danger">REORDER</span>' : '<span class="tag ok">HEALTHY</span>'}</div></div>
       <div><div class="k">Release certificate</div><div class="v">${p.cert}</div></div>
@@ -583,11 +879,12 @@ function actRegister(pnVal) {
 }
 
 /* ---------- Barcode / QR handling ---------- */
-function handleScanCode(decoded) {
+function handleScanCode(decoded, decodedResult) {
   if (!scanner) return;
   stopScanner();
-  const meta = { src: "barcode-qr" };
-  const a = analyzeCode(decoded);
+  const f = decodedResult && decodedResult.result && decodedResult.result.format && (decodedResult.result.format.format || decodedResult.result.format.toString());
+  const meta = { src: "barcode-qr", format: f };
+  const a = analyzeCode(decoded, meta);
   $("scanResult").innerHTML = `<div class="scan-kicker"><span class="tag info">SMART AUTO</span> decoded <span class="pn">${esc(decoded)}</span></div>` + renderAnalysis(a, meta);
   if (a.status === "exact") toast("ok", "Scan matched", decoded + " → " + a.part.pn);
   else if (a.status === "none") toast("warn", "No exact match", "Showing closest parts & actions.");
@@ -598,7 +895,7 @@ function manualScan(prefill) {
   if (prefill === undefined) stopScanner();
   if (!String(val).trim()) { toast("warn", "Empty code", "Enter a part number, QR payload or OCR text."); return; }
   const code = String(val).trim();
-  const a = analyzeCode(code);
+  const a = analyzeCode(code, { format: "MANUAL" });
   $("scanResult").innerHTML = `<div class="scan-kicker"><span class="tag ${a.status === "exact" ? "ok" : "neutral"}">SMART LOOKUP</span> input <span class="pn">${esc(code)}</span></div>` + renderAnalysis(a);
   if (a.status === "exact") toast("ok", "Match found", a.part.pn + " verified in inventory.");
   else if (a.status === "none") toast("warn", "No exact match", "Showing closest parts & actions.");
@@ -652,7 +949,7 @@ async function snapshotOcr() {
     $("scanResult").innerHTML = `<div class="scan-kicker"><span class="tag violet">AI OCR</span> <span style="font-size:12px;color:var(--dim)">confidence ${Math.round(((data && data.confidence) || 0))}%</span></div>
       <div class="ocr-raw"><b>Raw text</b><br>${esc(text) || "<i>nothing readable</i>"}</div>`;
     if (!text) { toast("warn", "OCR read nothing", "Try better lighting / closer focus, or use Manual."); return; }
-    const a = analyzeCode(text);
+    const a = analyzeCode(text, { format: "OCR" });
     $("scanResult").innerHTML += renderAnalysis(a);
     if (a.status === "exact") toast("ok", "OCR matched", text.replace(/\s+/g, " ").slice(0, 28) + " → " + a.part.pn);
     else if (a.status === "none") toast("warn", "OCR read but no exact PN", "Showing nearest parts.");
@@ -887,13 +1184,13 @@ function viewForecast() {
     .map((p) => { const f = aiForecast(p.pn); const r = aiReorder(p.pn, f); return { p, r, f }; })
     .sort((a, b) => b.r.riskScore - a.r.riskScore);
 
-  const riskCards = ranked.map(({ p, r }, i) => {
+  const riskCards = ranked.slice(0, 8).map(({ p, r }, i) => {
     const cls = r.risk === "HIGH" ? "warn" : r.risk === "MEDIUM" ? "" : "ok";
     const pill = r.risk === "HIGH" ? '<span class="tag danger">AOG RISK</span>'
       : r.risk === "MEDIUM" ? '<span class="tag warnb">WATCH</span>'
       : '<span class="tag ok">HEALTHY</span>';
     return `<div class="kpi ${cls}"><div class="kpi-label">#${i + 1} · ${p.pn}</div><div class="kpi-value" style="font-size:22px">${r.risk}</div><div class="kpi-sub">${r.daysTo === null ? "no stockout in 8w" : "stockout ≈ " + r.daysTo + "d · order " + r.qty + " pcs"} ${pill}</div></div>`;
-  }).join("");
+  }).join("") + (ranked.length > 8 ? `<div class="kpi"><div class="kpi-label">Full list</div><div class="kpi-value" style="font-size:20px">${STORE.parts.length}<span class="u">LN</span></div><div class="kpi-sub">${ranked.length - 8} more items risk-ranked below</div></div>` : "");
 
   const top = ranked[0];
   const part = top.p;
@@ -906,11 +1203,16 @@ function viewForecast() {
       <div class="panel-body"><canvas id="chartPred" height="130"></canvas></div></div>
     <div class="panel" style="margin-top:14px"><div class="panel-head"><div class="panel-title">AI reorder plan <span class="dim">auto-generated · risk-ordered</span></div></div>
       <div class="panel-body">
-        ${ranked.filter((x) => x.r.risk !== "HEALTHY").map(({ p, r }) => `
+        ${ranked.filter((x) => x.r.risk !== "HEALTHY").slice(0, 15).map(({ p, r }) => `
           <div class="reorder-row" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)">
             <div><b><span class="pn">${p.pn}</span></b> &mdash; ${p.name}<br><small style="color:var(--dim)">${p.stock} on hand vs min ${p.min} · forecast ${Math.round(r.avgWk)}/wk · stockout ~<b style="color:var(--amber)">${r.daysTo === null ? ">8w" : r.daysTo + "d"}</b></small></div>
             <div style="text-align:right"><span class="tag warnb">ORDER ${r.qty} PCS</span><br><small style="color:var(--dim)">$${(r.qty * p.unit).toLocaleString()}</small></div></div>`).join("")}
-        ${ranked.filter((x) => x.r.risk === "HEALTHY").length ? `<div class="empty" style="padding:14px">All other parts carry enough stock vs forecast.</div>` : ""}
+        ${(() => {
+          const rest = ranked.filter((x) => x.r.risk !== "HEALTHY").length - 15;
+          if (rest > 0) return `<div class="empty" style="padding:12px">+ ${rest} more items below reorder point — see full inventory grid.</div>`;
+          if (ranked.filter((x) => x.r.risk !== "HEALTHY").length === 0) return `<div class="empty" style="padding:14px">All parts carry enough stock vs forecast.</div>`;
+          return "";
+        })()}
       </div></div>`;
   try {
     killChart("chartPred");
