@@ -563,3 +563,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
   .ai-prop-grid { grid-template-columns: repeat(2, 1fr); }
   .ai-shell { height: calc(100vh - 260px); }
 }
+
+/* Retail catalog */
+.rbar { display: flex; gap: 10px; align-items: center; margin: 14px 0 10px; flex-wrap: wrap; }
+.rbar .scan-input { flex: 1; min-width: 200px; }
+.rbar-count { font-size: 11.5px; color: var(--dim); white-space: nowrap; }
+.r-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.r-card {
+  text-align: left; background: rgba(12, 26, 54, 0.85); border: 1px solid var(--line-2);
+  border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: transform .12s ease, border-color .12s ease;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.r-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.r-card-top { display: flex; justify-content: space-between; align-items: center; }
+.r-emoji { font-size: 18px; }
+.r-name { font-weight: 700; font-size: 14px; color: var(--ink); }
+.r-brand { font-size: 11.5px; color: var(--dim); }
+.r-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+.r-price { font-family: var(--mono); font-size: 16px; font-weight: 800; color: var(--accent); }
+.r-aisle { font-size: 10.5px; color: var(--dim); }

@@ -360,30 +360,30 @@ const RETAIL_DB = {
   sudzy: { key: "sudzy", name: "Sudzy Homecare", short: "SZY", country: "Zimbabwe", focus: ["Soap", "Detergents"], verified: false, trust: 3.4, sample: true, ref: "RZ/2000/013" }
 };
 const CONSUMER_ITEMS = [
-  ["Sunflower Cooking Oil 5L", "GoldenFields", "goldenfields", "Oils & Fats"],
-  ["Extra Virgin Olive Oil 1L", "MareTre", "olive-md", "Oils & Fats"],
-  ["Corn Oil 2L", "GoldenFields", "goldenfields", "Oils & Fats"],
-  ["Soybean Fine Oil 3L", "SunRay Mills", "sunray", "Oils & Fats"],
-  ["Cooking Oil 750ml", "CleaPure", "cleapure", "Oils & Fats"],
-  ["Sparkling Cola 330ml", "BlueBurst", "blueburst", "Beverages"],
-  ["Orange Juice 1L", "BlueBurst", "blueburst", "Beverages"],
-  ["Natural Spring Water 500ml", "AquaVale", "aquavale", "Beverages"],
-  ["Whole Milk 1L", "DairyHigh", "dairyhigh", "Dairy"],
-  ["Margarine 500g", "DairyHigh", "dairyhigh", "Dairy"],
-  ["Peanut Butter 400g", "NutRich", "nutrich", "Food"],
-  ["White Sugar 1kg", "SugArc", "sugarc", "Food"],
-  ["Maize Meal 10kg", "MillGood", "millgood", "Food"],
-  ["Rice 5kg", "TRA Foods", "trafoods", "Food"],
-  ["Cooking Salt 500g", "SaltLine", "saltline", "Food"],
-  ["Bath Soap 3-pack", "Sudzy", "sudzy", "Home Care"],
-  ["Shampoo 250ml", "CleaPure", "cleapure", "Personal Care"],
-  ["Hand Soap 500ml", "CleaPure", "cleapure", "Personal Care"]
+  ["Sunflower Cooking Oil 5L", "GoldenFields", "goldenfields", "Oils & Fats", 18.5, "Aisle 1 · Cooking Oils"],
+  ["Extra Virgin Olive Oil 1L", "MareTre", "olive-md", "Oils & Fats", 14.99, "Aisle 1 · Cooking Oils"],
+  ["Corn Oil 2L", "GoldenFields", "goldenfields", "Oils & Fats", 8.9, "Aisle 1 · Cooking Oils"],
+  ["Soybean Fine Oil 3L", "SunRay Mills", "sunray", "Oils & Fats", 10.5, "Aisle 1 · Cooking Oils"],
+  ["Cooking Oil 750ml", "CleaPure", "cleapure", "Oils & Fats", 3.2, "Aisle 1 · Cooking Oils"],
+  ["Sparkling Cola 330ml", "BlueBurst", "blueburst", "Beverages", 1.5, "Aisle 4 · Beverages"],
+  ["Orange Juice 1L", "BlueBurst", "blueburst", "Beverages", 2.8, "Aisle 4 · Beverages"],
+  ["Natural Spring Water 500ml", "AquaVale", "aquavale", "Beverages", 0.9, "Aisle 4 · Beverages"],
+  ["Whole Milk 1L", "DairyHigh", "dairyhigh", "Dairy", 1.8, "Aisle 3 · Dairy & Chilled"],
+  ["Margarine 500g", "DairyHigh", "dairyhigh", "Dairy", 2.3, "Aisle 3 · Dairy & Chilled"],
+  ["Peanut Butter 400g", "NutRich", "nutrich", "Food", 3.6, "Aisle 5 · Pantry"],
+  ["White Sugar 1kg", "SugArc", "sugarc", "Food", 2.1, "Aisle 5 · Pantry"],
+  ["Maize Meal 10kg", "MillGood", "millgood", "Food", 11.9, "Aisle 5 · Pantry"],
+  ["Rice 5kg", "TRA Foods", "trafoods", "Food", 9.5, "Aisle 5 · Pantry"],
+  ["Cooking Salt 500g", "SaltLine", "saltline", "Food", 0.85, "Aisle 5 · Pantry"],
+  ["Bath Soap 3-pack", "Sudzy", "sudzy", "Home Care", 2.4, "Aisle 6 · Home Care"],
+  ["Shampoo 250ml", "CleaPure", "cleapure", "Personal Care", 4.2, "Aisle 6 · Personal Care"],
+  ["Hand Soap 500ml", "CleaPure", "cleapure", "Personal Care", 3.1, "Aisle 6 · Personal Care"]
 ];
 const CONSUMER_DB = {};
 (function buildConsumerDb() {
   CONSUMER_ITEMS.forEach((it, i) => {
     const body = "2000" + String(i + 1).padStart(8, "0");
-    CONSUMER_DB[body + gtinCheckDigit(body)] = { name: it[0], brand: it[1], mfr: it[2], category: it[3] };
+    CONSUMER_DB[body + gtinCheckDigit(body)] = { name: it[0], brand: it[1], mfr: it[2], category: it[3], price: it[4], aisle: it[5] };
   });
 })();
 function upcEexpand(u8) {
@@ -548,7 +548,7 @@ function renderNav() {
   const nav = $("sideNav");
   const menu = {
     stores: [
-      { s: "Operations", items: [["#dashboard","Dashboard","&#9678;"],["#inventory","Inventory","&#9745;"],["#bins","Bin Map","&#9642;"],["#aog","AOG Desk","&#9888;", "aogBadge"],["#requisitions","Requisitions","&#8674;"],["#reports","Analytics","&#9661;"]] },
+      { s: "Operations", items: [["#dashboard","Dashboard","&#9678;"],["#inventory","Inventory","&#9745;"],["#bins","Bin Map","&#9642;"],["#retail","Retail Catalog","&#128722;"],["#aog","AOG Desk","&#9888;", "aogBadge"],["#requisitions","Requisitions","&#8674;"],["#reports","Analytics","&#9661;"]] },
       { s: "Intelligence", items: [["#assistant","AI Assistant","&#10052;"],["#forecast","AI Forecast","&#9680;"],["#passport","Parts Passport","&#9632;"]] }
     ],
     engineer: [
@@ -584,13 +584,14 @@ const VIEWS = {
   compliance: () => viewCompliance(),
   passport: () => viewPassport(),
   reports: () => viewReports(),
-  assistant: () => viewAssistant()
+  assistant: () => viewAssistant(),
+  retail: () => viewRetail()
 };
 
 function route(hash) {
   const key = (hash || "#dashboard").replace("#", "");
   document.querySelectorAll(".nav-link").forEach((b) => b.classList.toggle("active", b.dataset.href === "#" + key));
-  const titles = { dashboard: "Operations Dashboard", inventory: "Inventory Control", bins: "Digital Bin & Storage Mapper", aog: "AOG Response Desk", requisitions: "Requisitions", forecast: "AI Predictive Intelligence", compliance: "Compliance & Certificates", passport: "Blockchain Parts Passport", reports: "Analytics & Reports", assistant: "AI Assistant" };
+  const titles = { dashboard: "Operations Dashboard", inventory: "Inventory Control", bins: "Digital Bin & Storage Mapper", aog: "AOG Response Desk", requisitions: "Requisitions", forecast: "AI Predictive Intelligence", compliance: "Compliance & Certificates", passport: "Blockchain Parts Passport", reports: "Analytics & Reports", assistant: "AI Assistant", retail: "Retail Catalog" };
   $("pageTitle").textContent = titles[key] || "Dashboard";
   const view = VIEWS[key] || viewDashboard;
   $("content").innerHTML = `<div class="view-head"><div class="view-title"><h2>${titles[key] || "Dashboard"}</h2><p id="viewSub"></p></div><div class="view-actions" id="viewActions"></div></div><div id="viewBody"></div>`;
@@ -1037,6 +1038,52 @@ function tail(raw) {
 
 /* ---------- Result rendering ---------- */
 
+function viewRetail() {
+  const items = Object.keys(CONSUMER_DB).map((code) => ({ code, product: CONSUMER_DB[code], mfr: RETAIL_DB[CONSUMER_DB[code].mfr] || null }));
+  const brands = new Set(items.map((i) => i.product.brand));
+  const origins = new Set(items.map((i) => (i.mfr ? i.mfr.country : "")).filter(Boolean));
+  const low = Math.min(...items.map((i) => i.product.price)), high = Math.max(...items.map((i) => i.product.price));
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+  const flagOf = (c) => c === "Zimbabwe" ? "🇿🇼" : c === "Italy" ? "🇮🇹" : c === "South Africa" ? "🇿🇦" : "🌍";
+  const qHtml = (v) => v.replace(/</g, "&lt;");
+  const drawer = (list) => list.map((i) => `
+    <button class="r-card" onclick="retailInspect('${i.code}')">
+      <div class="r-card-top"><span class="r-emoji">🛒</span><span class="tag ${i.mfr && i.mfr.country === "Zimbabwe" ? "info" : "violet"}">${flagOf(i.mfr ? i.mfr.country : "")} ${esc(i.mfr ? i.mfr.country : "origin traced")}</span></div>
+      <div class="r-name">${esc(i.product.name)}</div>
+      <div class="r-brand">${esc(i.product.brand)} · ${esc(i.product.category)}</div>
+      <div class="r-foot"><span class="r-price">$${i.product.price.toFixed(2)}</span><span class="r-aisle">📍 ${esc(i.product.aisle)}</span></div>
+    </button>`).join("");
+  $("viewBody").innerHTML = `
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);max-width:820px">
+      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Catalog Items</span><span class="kpi-ic">&#128722;</span></div><div class="kpi-value">${items.length}</div><div class="kpi-sub">sample retail registry</div><div class="spark"></div></div>
+      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Brands</span><span class="kpi-ic">&#127871;</span></div><div class="kpi-value">${brands.size}</div><div class="kpi-sub">consumer makers</div><div class="spark"></div></div>
+      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Origin Countries</span><span class="kpi-ic">&#127760;</span></div><div class="kpi-value">${origins.size}</div><div class="kpi-sub">from GS1 + labels</div><div class="spark"></div></div>
+      <div class="kpi accent"><div class="kpi-top"><span class="kpi-label">Price Range</span><span class="kpi-ic">&#128176;</span></div><div class="kpi-value">$${low.toFixed(2)}<span class="u">–$${high.toFixed(2)}</span></div><div class="kpi-sub">USD retail</div><div class="spark"></div></div>
+    </div>
+    <div class="rbar"><input id="rSearch" class="scan-input" placeholder="Search name, brand, aisle or origin…" oninput="retailGrep(this.value)"><div class="rbar-count">${items.length} items · scan any GTIN to resolve</div></div>
+    <div id="rGrid" class="r-grid">${drawer(items)}</div>`;
+}
+function retailGrep(v) {
+  const q = String(v || "").toLowerCase().trim();
+  const items = Object.keys(CONSUMER_DB).map((code) => ({ code, product: CONSUMER_DB[code], mfr: RETAIL_DB[CONSUMER_DB[code].mfr] || null }));
+  const hit = items.filter((i) => !q || [i.product.name, i.product.brand, i.product.category, i.product.aisle, (i.mfr ? i.mfr.country : "")].join(" ").toLowerCase().includes(q));
+  const drawer = (list) => list.map((i) => `
+    <button class="r-card" onclick="retailInspect('${i.code}')">
+      <div class="r-card-top"><span class="r-emoji">🛒</span><span class="tag violet">${esc(i.mfr ? i.mfr.country : "")}</span></div>
+      <div class="r-name">${esc(i.product.name)}</div>
+      <div class="r-brand">${esc(i.product.brand)} · ${esc(i.product.category)}</div>
+      <div class="r-foot"><span class="r-price">$${i.product.price.toFixed(2)}</span><span class="r-aisle">📍 ${esc(i.product.aisle)}</span></div>
+    </button>`).join("");
+  const g = $("rGrid");
+  if (g) g.innerHTML = hit.length ? drawer(hit) : `<div class="empty" style="padding:24px">No catalog item matches <b>${qHtml(v)}</b> — that barcode is simply not loaded in this sample registry.</div>`;
+}
+function retailInspect(code) {
+  const a = analyzeCode(code, { format: "MANUAL" });
+  $("viewBody").innerHTML = `<div class="scan-kicker"><span class="tag violet">RETAIL CATALOG</span> GTIN <span class="pn">${esc(code)}</span></div>
+    ${renderAnalysis(a, { format: "MANUAL" })}
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center"><button class="btn btn-sm" onclick="viewRetail()">← Back to catalog</button><button class="btn btn-sm" onclick="manualScan('${esc(code)}')">Rescan as store part</button></div>`;
+}
+
 function renderAnalysis(a, meta) {
   const openActs = (pn) => `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
@@ -1081,17 +1128,20 @@ function consumerCard(a) {
   if (!a || !a.consumer) return "";
   const p = a.consumer;
   const codeStr = (a.codeInfo && a.codeInfo.payload && (a.codeInfo.payload.gtin || a.codeInfo.payload["01"])) || "";
+  const mfrC = a.company && a.company.company ? a.company.company : null;
+  const origin = mfrC ? `<span style="color:var(--accent);font-weight:700">${flagOf(mfrC.country)} ${esc(mfrC.country)}</span>` : `<span style="color:var(--dim)">traced</span>`;
   return `<div class="co-card co-consumer">
     <div class="co-head">🛒 PRODUCT INTELLIGENCE <span>// ANY BARCODE</span></div>
     <div class="co-body">
       <div class="co-crest co-retail">🛒</div>
       <div>
         <div class="co-name">${esc(p.name)}</div>
-        <div class="co-meta">${esc(p.brand)} &middot; ${esc(p.category)} &middot; origin ${esc((a.company && a.company.company ? flagOf(a.company.company.country) + " " + a.company.company.country : "traced"))}</div>
+        <div class="co-meta">${esc(p.brand)} &middot; ${esc(p.category)}</div>
+        <div class="co-meta">${mfrC ? `<span class="pn">${esc(mfrC.name)}</span>` : ""} &middot; origin ${origin}</div>
       </div>
       <span class="tag violet">RETAIL ITEM</span>
     </div>
-    <div class="co-focus"><span class="tag warnb">SAMPLE REGISTRY</span><span class="tag info">GS1 item of ${esc(p.brand)}</span><span class="tag neutral">Valid GTIN</span></div>
+    <div class="co-focus"><span class="tag warnb">SAMPLE REGISTRY</span><span class="tag info">${typeof p.price === "number" ? "USD " + p.price.toFixed(2) : "price on enquiry"}</span>${p.aisle ? `<span class="tag neutral">${esc(p.aisle)}</span>` : ""}</div>
     <div class="co-foot"><span>registered retail product</span><span class="pn">GTIN ${codeStr ? esc(codeStr.slice(0, 14)) : "—"}</span><span class="co-stars">${"★".repeat(3)}${"☆".repeat(2)} 3.6</span></div>
   </div>`;
 }
