@@ -599,13 +599,43 @@ function route(hash) {
 }
 
 /* ---------------- Shared builders ---------------- */
+const DASH_SLIDES = [
+  { bg: "https://picsum.photos/seed/tslms-hangar/1400/520", kicker: "AIR ZIMBABWE BASES", title: "Fleet readiness, live from the hangar", sub: "Every scanned part updates inventory, passports and AOG alerts in real time — terminal intelligence on your phone.", cta: "Scan a part", go: "openScanner()" },
+  { bg: "https://picsum.photos/seed/tslms-cargo/1400/520", kicker: "ANY BARCODE, ANY COUNTRY", title: "Know where it was actually made", sub: "Reads EAN/UPC/GS1 plus the label itself — so origin reflects the factory, not just the GS1 office.", cta: "Retail Catalog", go: "route('#retail')" },
+  { bg: "https://picsum.photos/seed/tslms-sky/1400/520", kicker: "AI FORECASTING", title: "Predict before the aircraft goes quiet", sub: "87% forecast accuracy on demand — consumption, shelf-life risk and AOG likelihood flagged ahead of time.", cta: "AI Forecast", go: "route('#forecast')" },
+  { bg: "https://picsum.photos/seed/tslms-ledger/1400/520", kicker: "BLOCKCHAIN PASSPORT", title: "Every part. One immutable ledger.", sub: "Chain of custody from OEM to tag-out — cryptographic, tamper-evident and audit-ready.", cta: "Parts Passport", go: "route('#passport')" }
+];
+let slideN = 0;
+function heroSlideHTML() {
+  return `<div class="hero-slider" id="heroSlider" onmouseenter="pauseHero()" onmouseleave="resumeHero()">
+    ${DASH_SLIDES.map((s2, i) => `
+      <div class="hero-slide ${i === slideN ? "on" : ""}" style="background-image:linear-gradient(rgba(7,13,26,.82),rgba(7,13,26,.92)),url('${s2.bg}')">
+        <div class="hero-inner">
+          <div class="hero-kick">${s2.kicker}</div>
+          <div class="hero-title">${s2.title}</div>
+          <div class="hero-sub">${s2.sub}</div>
+          <div class="hero-cta row"><button class="btn btn-accent" onclick="${s2.go}">${s2.cta}</button></div>
+        </div>
+      </div>`).join("")}
+    <button class="hero-nav hero-prev" onclick="slideStep(-1)" aria-label="Previous">&#10094;</button>
+    <button class="hero-nav hero-next" onclick="slideStep(1)" aria-label="Next">&#10095;</button>
+    <div class="hero-dots">${DASH_SLIDES.map((_, i) => `<span class="hero-dot ${i === slideN ? "on" : ""}" onclick="slideGo(${i})"></span>`).join("")}</div>
+  </div>`;
+}
+function slideGo(i) { slideN = ((i % DASH_SLIDES.length) + DASH_SLIDES.length) % DASH_SLIDES.length; const h = $("heroSlider"); if (h) h.innerHTML = heroSlideHTML(); }
+function slideStep(d) { slideGo(slideN + d); }
+let heroTimer = null;
+function pauseHero() { if (heroTimer) { clearInterval(heroTimer); heroTimer = null; } }
+function resumeHero() { pauseHero(); heroTimer = setInterval(() => slideStep(1), 6000); }
 function viewDashboard() {
+  resumeHero();
   const aogActive = STORE.aog.filter((a) => a.step < 3);
   const lowStock = STORE.parts.filter((p) => p.stock < p.min);
   const risk = STORE.parts.filter((p) => p.life === "EXPIRING").length;
   const stockValue = STORE.parts.reduce((s, p) => s + p.stock * p.unit, 0);
   const spark = (vals, g) => vals.map((v) => `<i class="${g ? "g" : ""}" style="height:${v}%"></i>`).join("");
   $("viewBody").innerHTML = `
+    ${heroSlideHTML()}
     <div class="kpi-grid">
       <div class="kpi"><div class="kpi-top"><span class="kpi-label">Aircraft On Ground</span><span class="kpi-ic">&#9888;</span></div>
         <div class="kpi-value">${aogActive.length}</div><div class="kpi-sub">active AOG events</div>
