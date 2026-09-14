@@ -63,7 +63,17 @@ Open `index.html` in any browser. No build step and **no internet required** —
 tslms-demo/
   index.html            # App shell + login
   styles.css            # TSLMS Pro UI kit
-  app.js                # Router, auth, simulated AI + live workflow + intelligent scanner
+  js/
+    core.js             # Global DOM helpers, catalogue seed, code utilities
+    data.js             # Static registries: store parts, OEM bank, country/GS1 tables, retail catalogue, racks & notifications
+    codes.js            # Code-resolution index + GS1 / GTIN / EAN / UPC decoding
+    intel.js            # Barcode inspection + analyzeCode (any barcode → part, retail product or manufacturer trace)
+    store.js            # Seed requisitions, notifications, toasts, auth
+    nav.js              # Role-based navigation and the view router
+    views.js            # All view renderers, shared cards/sheets, charts, modals
+    actions.js          # Store operations: issue, AOG, register, transfer, requisitions
+    scanner.js          # Camera scanner, Super Scan AI, OCR, manual lookup
+    boot.js             # Live simulation loop, login/event bindings, console handle
   ai.js                 # TSLMS AI Core — demand model, Holt forecast, anomalies, reorder engine, NLP intent engine + assistant
   vendor/
     chart.umd.min.js    # Chart.js 4.4.3 (local copy — no CDN needed)
@@ -84,7 +94,7 @@ tslms-demo/
 ## Host on GitHub Pages (free)
 
 1. Create a repo (e.g. `tslms-pro-demo`)
-2. Push `index.html`, `styles.css`, `app.js`, `README.md` to `main`
+2. Push `index.html`, `styles.css`, `js/`, `ai.js`, `README.md` to `main`
 3. Repo **Settings → Pages** → Source: *Deploy from a branch* → branch `main`, root `/`
 4. Live at `https://<your-username>.github.io/tslms-pro-demo/`
 
