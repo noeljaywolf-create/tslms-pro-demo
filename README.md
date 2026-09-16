@@ -51,7 +51,7 @@ Professional, fully-interactive product simulation of an intelligent aviation te
   - Rolling z-score anomaly detection
   - Reorder intelligence — risk tiering (HIGH/MEDIUM/LOW/HEALTHY), days-to-stockout, suggested order quantity
 - **AI Forecast view rebuilt on the live model** — every part is risk-ranked from computed forecasts (no hardcoded numbers), with the top-risk part charted against safety stock
-- **Fully responsive** — mobile layouts for login, KPIs, kanban (horizontal scroll), tables, bin map and scanner
+- **Fully responsive** — professional phone/tablet shell: slide-in drawer navigation with hamburger toggle, role-aware **bottom navigation bar** (Dashboard / AOG / central Scan / Requests), bottom-sheet modals (full-height scanner), touch-sized controls, safe-area insets, and horizontal-scroll layouts for kanban, tables and the bin map
 
 ## Run locally
 

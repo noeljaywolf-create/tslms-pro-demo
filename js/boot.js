@@ -19,6 +19,8 @@ function liveLoop() {
   if (location.hash === "#aog" && $("aogLog")) $("aogLog").innerHTML = activityFeedHTML();
   const badge = $("aogBadge");
   if (badge) badge.textContent = STORE.aog.filter((a) => a.step < 3).length;
+  const badgeM = $("aogBadgeM");
+  if (badgeM) badgeM.textContent = STORE.aog.filter((a) => a.step < 3).length;
 }
 
 setInterval(liveLoop, 1000);
@@ -42,8 +44,14 @@ $("loginForm").addEventListener("submit", (e) => {
 
 $("scanBtn").addEventListener("click", openScanner);
 
+$("navToggle").addEventListener("click", () => {
+  if (document.body.classList.contains("nav-open")) closeNav(); else openNav();
+});
+$("navBackdrop").addEventListener("click", closeNav);
+
 $("logoutBtn").addEventListener("click", () => {
   session = null;
+  closeNav();
   $("app").classList.add("hidden");
   $("loginScreen").classList.remove("hidden");
   $("content").innerHTML = "";

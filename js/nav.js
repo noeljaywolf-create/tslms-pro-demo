@@ -31,6 +31,35 @@ function renderNav() {
   document.querySelectorAll(".nav-link").forEach((b) => b.addEventListener("click", () => route(b.dataset.href)));
 }
 
+/* ---------------- Mobile navigation (bottom bar + drawer) ---------------- */
+const MOBILE_NAV = {
+  stores: [["#dashboard", "Dashboard", "&#9678;"], ["#aog", "AOG", "&#9888;", "aogBadgeM"], ["__scan__", "Scan", "&#10052;"], ["#requisitions", "Requests", "&#8674;"]],
+  engineer: [["#dashboard", "Dashboard", "&#9678;"], ["#aog", "AOG", "&#9888;", "aogBadgeM"], ["__scan__", "Scan", "&#10052;"], ["#requisitions", "Requests", "&#8674;"]],
+  inspector: [["#dashboard", "Dashboard", "&#9678;"], ["#reports", "Reports", "&#9661;"], ["__scan__", "Scan", "&#10052;"], ["#assistant", "AI", "&#10052;"]]
+};
+
+function renderMobileNav() {
+  const bar = $("mobileNav");
+  if (!bar) return;
+  const items = MOBILE_NAV[(session && session.role) || "stores"] || MOBILE_NAV.stores;
+  const aogCount = STORE.aog.filter((a) => a.step < 3).length;
+  bar.innerHTML = items.map(([href, label, ic, badge]) =>
+    href === "__scan__"
+      ? `<button class="mb-scan" data-scan="1" aria-label="Scan"><span class="mb-ic">${ic}</span><span class="mb-txt">${label}</span></button>`
+      : `<button class="nav-link mb-link" data-href="${href}"><span class="mb-ic">${ic}</span><span class="mb-txt">${label}</span>${badge ? `<span class="n-badge" id="${badge}">${aogCount}</span>` : ""}</button>`
+  ).join("");
+  bar.querySelectorAll(".nav-link").forEach((b) => b.addEventListener("click", () => { closeNav(); route(b.dataset.href); }));
+  const scan = bar.querySelector("[data-scan]");
+  if (scan) scan.addEventListener("click", () => { closeNav(); openScanner(); });
+}
+
+function openNav() {
+  document.body.classList.add("nav-open");
+}
+function closeNav() {
+  document.body.classList.remove("nav-open");
+}
+
 /* ---------------- Router ---------------- */
 /* Lazy wrappers so views defined in later scripts (ai.js) resolve without load-order errors */
 const VIEWS = {

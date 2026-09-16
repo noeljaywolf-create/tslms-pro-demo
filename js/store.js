@@ -76,6 +76,7 @@ function doLogin(user, pass) {
   $("userRole").textContent = u.title;
   $("avatar").textContent = u.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
   renderNav();
+  renderMobileNav();
   route(location.hash || "#dashboard");
   toast("ok", `Welcome back, ${u.name.split(" ")[0]}`, `Signed in as ${u.title}`);
   seedData();
