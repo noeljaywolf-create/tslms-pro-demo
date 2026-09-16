@@ -77,6 +77,7 @@ const VIEWS = {
 };
 
 function route(hash) {
+  closeNav();
   const key = (hash || "#dashboard").replace("#", "");
   document.querySelectorAll(".nav-link").forEach((b) => b.classList.toggle("active", b.dataset.href === "#" + key));
   const titles = { dashboard: "Operations Dashboard", inventory: "Inventory Control", bins: "Digital Bin & Storage Mapper", aog: "AOG Response Desk", requisitions: "Requisitions", forecast: "AI Predictive Intelligence", compliance: "Compliance & Certificates", passport: "Blockchain Parts Passport", reports: "Analytics & Reports", assistant: "AI Assistant", retail: "Retail Catalog" };
