@@ -5,7 +5,7 @@ Professional, fully-interactive product simulation of an intelligent aviation te
 ## What's inside (Pro version)
 
 - **Role-based sign-in** with three demo accounts:
-  - `m.chikumba` / `stores123` — Stores Controller (full operations)
+  - `m.faith` / `stores123` — Stores Controller (full operations)
   - `t.ndlovu` / `eng123` — Maintenance Engineer (maintenance + intelligence)
   - `k.moyo` / `insp123` — Quality Inspector (compliance + audit)
 - **Role-aware navigation** — each role sees only its relevant modules

@@ -18,7 +18,7 @@ function killChart(key) { if (charts[key]) { charts[key].destroy(); delete chart
 /* ---------------- Data store ---------------- */
 const STORE = {
   users: [
-    { user: "m.chikumba", pass: "stores123", role: "stores", name: "M. Chikumba", title: "Stores Controller" },
+    { user: "m.faith", pass: "stores123", role: "stores", name: "M. FAITH", title: "Stores Controller" },
     { user: "t.ndlovu", pass: "eng123", role: "engineer", name: "T. Ndlovu", title: "Maintenance Engineer" },
     { user: "k.moyo", pass: "insp123", role: "inspector", name: "K. Moyo", title: "Quality Inspector" }
   ],
