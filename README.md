@@ -39,3 +39,11 @@ Research reference: [EASA technical records guidance](https://www.easa.europa.eu
 - The color palette uses green, gold, red and black inspired by the [official Air Zimbabwe logo](https://www.airzimbabwe.aero/wp-content/uploads/2026/03/air-zim-logo.png). UI hex values are contrast-adjusted approximations, not official brand-guide specifications.
 
 Presentation workflow: Stores Controller receives a component → Quality Inspector records inspection → Engineer installs it → Engineer records aircraft utilisation → Maintenance Outlook recalculates due dates → remove the component when needed and view the custody log. Demo accounts: m.faith / stores123, k.moyo / insp123, t.ndlovu / eng123.
+
+## Calibration, independent life inspection and laboratory workflows
+
+The Assurance menu now includes Calibration, Life Inspection, and Laboratory & NDT. Calibration holds gate planned work and work starts. As-found failures open an affected-work review; as-left failures remain blocked. Inspectors record supporting evidence and component counter snapshots; changes make a verified review stale, and unresolved discrepancies create quality holds. Fitment requires a current life review. Serial-linked lab requests track custody, reports and disposition, with adverse findings connected to technical defects.
+
+Export record pack includes these records as JSON. Records persist in the current browser. Equipment limits, certificates and screening measurements are demo values; external laboratory testing and approved maintenance data remain required.
+
+Run `node tests/quality.cjs` and `node tests/technical.cjs` for domain verification. Research: [Lufthansa Technik laboratory services](https://www.lufthansa-technik.com/en/laboratory-services), [NIST traceability](https://www.nist.gov/calibrations/traceability), [EASA equipment guide](https://www.easa.europa.eu/en/downloads/137306/en), [FAA maintenance programmes](https://www.faa.gov/documentlibrary/media/advisory_circular/ac%20120-16f.pdf), and [ICAO electronic maintenance records](https://www.icao.int/operational-safety/normal-airworthiness).
