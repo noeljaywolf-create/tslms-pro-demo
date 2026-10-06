@@ -5,7 +5,7 @@
 
 function renderNav() {
   const nav = $("sideNav");
-  const engineering = { s: "Aircraft Engineering", items: [["#dashboard","Engineering Overview","◈"],["#fleet","Fleet Management","✈"],["#components","Component Life","◷"],["#ata","ATA Chapters","▦"],["#aog","AOG Response","!","aogBadge"]] };
+  const engineering = { s: "Aircraft Engineering", items: [["#dashboard","Engineering Overview","◈"],["#fleet","Fleet Management","✈"],["#components","Component Life","◷"],["#resources","Resource Planning","▤"],["#serviceable","Component Tags","▧"],["#profiles","People & Profiles","◎"],["#ata","ATA Chapters","▦"],["#aog","AOG Response","!","aogBadge"]] };
   const stores = { s: "Technical Operations", items: [["#inventory","Technical Stores","▣"],["#bins","Storage & Bins","▤"],["#logistics","Logistics Intelligence","↗"],["#requisitions","Requisitions","⇢"]] };
   const quality = { s: "Assurance & Intelligence", items: [["#compliance","Compliance","✓"],["#passport","Parts Traceability","⬡"],["#forecast","Demand Forecast","◔"],["#assistant","AI Assistant","✧"]] };
   const menu = {stores:[engineering,stores,quality],engineer:[engineering,stores,quality],inspector:[engineering,{s:"Technical Stores",items:[["#inventory","Technical Stores","▣"],["#logistics","Logistics Intelligence","↗"]]},quality]};
@@ -55,6 +55,9 @@ function closeNav() {
 const VIEWS = {
   dashboard: () => viewEngineeringDashboard(),
   fleet: () => viewFleet(),
+  resources: () => viewResources(),
+  serviceable: () => viewServiceable(),
+  profiles: () => viewProfiles(),
   components: () => viewComponents(),
   ata: () => viewAta(),
   logistics: () => viewLogistics(),
@@ -80,7 +83,7 @@ function route(hash) {
   Object.keys(charts).forEach(killChart);
   if(location.hash !== "#"+key) history.replaceState(null,"","#"+key);
   document.querySelectorAll(".nav-link").forEach((b) => b.classList.toggle("active", b.dataset.href === "#" + key));
-  const titles = { dashboard: "Engineering Overview", fleet: "Fleet Management", components: "Component Life Tracking", ata: "ATA Chapters", logistics: "Logistics Intelligence", inventory: "Technical Stores", bins: "Digital Bin & Storage Mapper", aog: "AOG Response Desk", requisitions: "Requisitions", forecast: "AI Predictive Intelligence", compliance: "Compliance & Certificates", passport: "Parts Traceability", reports: "Logistics Intelligence", assistant: "AI Assistant", retail: "Technical Stores" };
+  const titles = { dashboard: "Engineering Overview", fleet: "Fleet Management", resources: "Resource Planning", serviceable: "Digital Component Tags", profiles: "People & Profiles", components: "Component Life Tracking", ata: "ATA Chapters", logistics: "Logistics Intelligence", inventory: "Technical Stores", bins: "Digital Bin & Storage Mapper", aog: "AOG Response Desk", requisitions: "Requisitions", forecast: "AI Predictive Intelligence", compliance: "Compliance & Certificates", passport: "Parts Traceability", reports: "Logistics Intelligence", assistant: "AI Assistant", retail: "Technical Stores" };
   $("pageTitle").textContent = titles[key] || "Dashboard";
   const view = VIEWS[key] || viewEngineeringDashboard;
   $("content").innerHTML = `<div class="view-head"><div class="view-title"><h2>${titles[key] || "Dashboard"}</h2><p id="viewSub"></p></div><div class="view-actions" id="viewActions"></div></div><div id="viewBody"></div>`;
