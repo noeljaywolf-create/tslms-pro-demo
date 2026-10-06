@@ -1,0 +1,100 @@
+/* Engineering visual system: navy navigation, bright technical workspace. */
+:root { --bg:#f2f5fa;--bg-2:#101e35;--panel:#fff;--panel-2:#f6f8fc;--line:#e2e8f0;--line-2:#c9d5e5;--txt:#1c2d45;--dim:#63748c;--dimmer:#7e8ea4;--accent:#2166df;--accent-2:#2166df;--green:#16836b;--amber:#ac7017;--red:#c94747;--radius:12px;--shadow:0 18px 50px #11264424;--ink:#1c2d45; }
+body { background:var(--bg); }
+.sidebar { width:252px;border:0;background:#101e35;color:#e5edf8; }
+.sidebar .side-title small,.sidebar .side-user-role,.sidebar .nav-link { color:#acbbcf; }
+.sidebar .side-user { background:#1b2a42;border-color:#293950; }
+.sidebar .nav-section { color:#7e92b0;letter-spacing:1.4px;font-size:9px;margin-top:20px; }
+.sidebar .nav-link { font-size:12px;padding:10px 12px; }
+.sidebar .nav-link.active { color:#fff;background:#254879;border-left:3px solid #73aaff; }
+.sidebar .nav-link:hover { background:#20324f;color:#fff; }
+.sidebar .icon-btn { background:#26374f;border-color:#394a62;color:#d3deef; }
+.sidebar .side-foot { border-color:#2b3950; }
+.sidebar .side-foot-line { color:#7cd8c0; }
+.sidebar .side-foot-sub { color:#93a4bc; }
+.topbar { background:#ffffffed;border-color:var(--line);padding:17px 28px; }
+.page-title { font-size:15px;font-weight:600; }
+.content { padding:30px 32px 44px;max-width:1600px; }
+.view-head { margin-bottom:23px;align-items:center; }
+.view-title h2 { font-size:26px;letter-spacing:-.8px; }
+.view-title p { max-width:760px;margin-top:5px; }
+.panel { box-shadow:0 3px 10px #17345b04; }
+.panel-head { padding:19px 20px 9px; }
+.panel-title { font-size:14px; }
+.panel-body { padding:12px 20px 20px; }
+.btn { background:#fff;color:#334761;border-color:#d6e0ed;font-weight:600; }
+.btn:hover { background:#eef4fc;color:#205ac0; }
+.btn-accent,.btn-primary { background:#2166df;color:#fff;border-color:#2166df;box-shadow:none; }
+.btn-accent:hover,.btn-primary:hover { background:#1957c2;color:#fff; }
+.kpi { background:#fff;box-shadow:none;padding:20px;border-color:#e2e8f0; }
+.kpi-value { font-size:32px;font-weight:700;letter-spacing:-1px; }
+.kpi-label { font-size:11px;text-transform:uppercase;letter-spacing:.8px; }
+.kpi.warn { border-top:3px solid #d4a451; }
+.kpi-sub { font-size:11px; }
+.engineering-kpis { grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:22px; }
+.engineering-banner { display:flex;justify-content:space-between;gap:30px;padding:32px 36px;border-radius:16px;background:linear-gradient(120deg,#152c50,#244b7c);color:#fff;overflow:hidden;position:relative; }
+.engineering-banner:after { content:"";position:absolute;right:-90px;top:-170px;width:430px;height:430px;border:1px solid #90b9ed26;border-radius:50%;pointer-events:none; }
+.engineering-banner h2 { font-size:30px;line-height:1.22;letter-spacing:-.7px;margin:10px 0 13px; }
+.engineering-banner p { color:#bdd0e8;font-size:12px;max-width:480px;margin-bottom:20px; }
+.eyebrow { font-size:9px;letter-spacing:2.3px;font-weight:700;color:#94bffc; }
+.engineering-banner .row { display:flex;gap:10px;flex-wrap:wrap; }
+.engineering-banner .btn:not(.btn-accent) { background:#ffffff10;color:#fff;border-color:#ffffff30; }
+.banner-emblem { min-width:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:1; }
+.banner-emblem>span { font-size:78px;line-height:1.1;color:#c3dbfc;transform:rotate(-20deg); }
+.banner-emblem>small { color:#a9c1df;font-size:9px;letter-spacing:1.3px; }
+.banner-emblem>b { font-size:13px;margin-top:6px; }
+.section-label { display:flex;justify-content:space-between;align-items:center;margin:28px 0 13px;gap:10px; }
+.section-label h3 { font-size:16px; }
+.section-label>span { font-size:11px;color:var(--dim); }
+.fleet-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:24px; }
+.aircraft-card { border:1px solid var(--line);background:#fff;border-radius:12px;padding:20px; }
+.aircraft-top { display:flex;align-items:center;justify-content:space-between;gap:6px; }
+.aircraft-symbol { color:#2c6adc;background:#edf3fc;width:38px;height:38px;display:grid;place-items:center;border-radius:10px;font-size:21px; }
+.aircraft-card h3 { font-size:24px;letter-spacing:.5px;margin-top:15px; }
+.aircraft-card p { color:var(--dim);font-size:11px; }
+.aircraft-data { display:grid;grid-template-columns:1fr 1fr;margin:19px 0; }
+.aircraft-data small,.aircraft-card>small { display:block;color:var(--dim);font-size:10px; }
+.aircraft-data b { font-family:var(--mono);font-size:16px; }
+.aircraft-bottom { display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:14px;margin-bottom:10px; }
+.aircraft-bottom>span { font-size:10px;color:var(--dim); }
+.attention-row { display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:14px 0;border:0;border-bottom:1px solid var(--line);background:none;color:var(--txt);font-family:inherit; }
+button.attention-row { cursor:pointer; }
+button.attention-row:hover { background:#f7f9fc; }
+.attention-row b { font-size:12px; }
+.attention-row small,.table-sub { display:block;font-size:10px;color:var(--dim);margin-top:4px; }
+.attention-row:last-child { border-bottom:0; }
+.shortage { text-align:right;font-family:var(--mono);font-size:13px;color:#b44747; }
+.shortage small { font-family:inherit;font-size:8px; }
+.tag { font-size:9px;letter-spacing:.2px;white-space:nowrap; }
+.tag.ok { background:#e9f7ef;color:#1e805b;border-color:#d8eddf; }
+.tag.danger { background:#fdf0f0;color:#c04444;border-color:#f5dada; }
+.tag.info { background:#edf3fd;color:#2c65b7;border-color:#dce7f8; }
+.tag.warnb { background:#fff7e7;color:#a87220;border-color:#f4e6c6; }
+.tbl th { background:#f8fafd;padding:14px 16px;font-size:9px; }
+.tbl td { padding:15px 16px;font-size:12px; }
+.engineering-toolbar { display:flex;gap:12px;margin:18px 0; }
+.engineering-toolbar input,.engineering-toolbar select { background:#fff;border:1px solid var(--line-2);padding:11px 14px;border-radius:9px;color:var(--txt);font:inherit;font-size:12px; }
+.engineering-toolbar input { flex:1;min-width:0; }
+.form-note { color:var(--dim);font-size:11px;margin:16px 0; }
+.ata-layout { display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start; }
+.ata-chapters { display:grid;gap:7px;max-height:75vh;overflow:auto;padding-right:3px; }
+.ata-chapter { display:flex;gap:11px;align-items:center;text-align:left;background:#fff;border:1px solid var(--line);padding:12px;border-radius:9px;color:var(--txt);cursor:pointer; }
+.ata-chapter>span { background:#eef3fb;color:#3466ab;border-radius:6px;padding:7px;font-family:var(--mono);font-size:12px; }
+.ata-chapter b { font-size:11px; }
+.ata-chapter small { display:block;font-size:10px;color:var(--dim); }
+.ata-chapter.selected { border-color:#2166df;background:#eef5ff; }
+.modal,.notif-panel,.toast { background:#fff; }
+.modal input,.modal select,.search-box,.login-card input { background:#f8fafd;color:var(--txt);border-color:var(--line-2); }
+.login-brand { background:linear-gradient(130deg,#112544,#254e7c);color:#fff; }
+.login-brand p,.login-features { color:#c0d0e5; }
+.login-brand h1 { font-size:44px; }
+.login-panel { background:#f2f5fa; }
+.login-card { background:#fff;box-shadow:0 18px 55px #102b4c0d; }
+.role-card { background:#f7f9fd;color:var(--txt);border-color:var(--line); }
+.role-card.active { background:#eaf2ff;border-color:#2166df; }
+.role-name { color:var(--txt); }
+.mobile-nav { background:#fff;border-color:var(--line); }
+.mobile-nav .nav-link.active { color:#2166df;background:#edf4ff; }
+@media(min-width:1500px) { .engineering-banner { padding:40px; }.engineering-banner h2 { font-size:35px; } }
+@media(max-width:1100px) { .content { padding:24px; }.fleet-grid { grid-template-columns:1fr; }.aircraft-card { display:block; }.engineering-banner { padding:26px; }.banner-emblem { min-width:130px; }.ata-layout { grid-template-columns:190px minmax(0,1fr); }.engineering-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:768px) { .content { padding:20px 14px 90px; }.sidebar { width:270px; }.topbar { padding:12px 14px; }.view-title h2 { font-size:23px; }.view-actions { flex-wrap:wrap; }.engineering-banner { padding:24px; }.engineering-banner h2 { font-size:25px; }.banner-emblem { display:none; }.engineering-grid { grid-template-columns:1fr; }.section-label>span { display:none; }.engineering-toolbar { flex-direction:column; }.ata-layout { grid-template-columns:1fr; }.ata-chapters { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:235px; }.engineering-kpis { gap:10px; }.kpi { padding:16px; }.kpi-label { font-size:9px; }.kpi-value { font-size:29px; }.login-brand h1 { font-size:31px; } }

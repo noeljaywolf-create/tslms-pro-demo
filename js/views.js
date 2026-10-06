@@ -4,70 +4,7 @@
 "use strict";
 
 /* ---------------- Shared builders ---------------- */
-const DASH_SLIDES = [
-  { bg: "https://picsum.photos/seed/tslms-hangar/1400/520", kicker: "AIR ZIMBABWE BASES", title: "Fleet readiness, live from the hangar", sub: "Every scanned part updates inventory, passports and AOG alerts in real time — terminal intelligence on your phone.", cta: "Scan a part", go: "openScanner()" },
-  { bg: "https://picsum.photos/seed/tslms-cargo/1400/520", kicker: "ANY BARCODE, ANY COUNTRY", title: "Know where it was actually made", sub: "Reads EAN/UPC/GS1 plus the label itself — so origin reflects the factory, not just the GS1 office.", cta: "Retail Catalog", go: "route('#retail')" },
-  { bg: "https://picsum.photos/seed/tslms-sky/1400/520", kicker: "AI FORECASTING", title: "Predict before the aircraft goes quiet", sub: "87% forecast accuracy on demand — consumption, shelf-life risk and AOG likelihood flagged ahead of time.", cta: "AI Forecast", go: "route('#forecast')" },
-  { bg: "https://picsum.photos/seed/tslms-ledger/1400/520", kicker: "BLOCKCHAIN PASSPORT", title: "Every part. One immutable ledger.", sub: "Chain of custody from OEM to tag-out — cryptographic, tamper-evident and audit-ready.", cta: "Parts Passport", go: "route('#passport')" }
-];
-let slideN = 0;
-function heroSlideHTML() {
-  return `<div class="hero-slider" id="heroSlider" onmouseenter="pauseHero()" onmouseleave="resumeHero()">
-    ${DASH_SLIDES.map((s2, i) => `
-      <div class="hero-slide ${i === slideN ? "on" : ""}" style="background-image:linear-gradient(rgba(7,13,26,.82),rgba(7,13,26,.92)),url('${s2.bg}')">
-        <div class="hero-inner">
-          <div class="hero-kick">${s2.kicker}</div>
-          <div class="hero-title">${s2.title}</div>
-          <div class="hero-sub">${s2.sub}</div>
-          <div class="hero-cta row"><button class="btn btn-accent" onclick="${s2.go}">${s2.cta}</button></div>
-        </div>
-      </div>`).join("")}
-    <button class="hero-nav hero-prev" onclick="slideStep(-1)" aria-label="Previous">&#10094;</button>
-    <button class="hero-nav hero-next" onclick="slideStep(1)" aria-label="Next">&#10095;</button>
-    <div class="hero-dots">${DASH_SLIDES.map((_, i) => `<span class="hero-dot ${i === slideN ? "on" : ""}" onclick="slideGo(${i})"></span>`).join("")}</div>
-  </div>`;
-}
-function slideGo(i) { slideN = ((i % DASH_SLIDES.length) + DASH_SLIDES.length) % DASH_SLIDES.length; const h = $("heroSlider"); if (h) h.innerHTML = heroSlideHTML(); }
-function slideStep(d) { slideGo(slideN + d); }
-let heroTimer = null;
-function pauseHero() { if (heroTimer) { clearInterval(heroTimer); heroTimer = null; } }
-function resumeHero() { pauseHero(); heroTimer = setInterval(() => slideStep(1), 6000); }
-function viewDashboard() {
-  resumeHero();
-  const aogActive = STORE.aog.filter((a) => a.step < 3);
-  const lowStock = STORE.parts.filter((p) => p.stock < p.min);
-  const risk = STORE.parts.filter((p) => p.life === "EXPIRING").length;
-  const stockValue = STORE.parts.reduce((s, p) => s + p.stock * p.unit, 0);
-  const spark = (vals, g) => vals.map((v) => `<i class="${g ? "g" : ""}" style="height:${v}%"></i>`).join("");
-  $("viewBody").innerHTML = `
-    ${heroSlideHTML()}
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Aircraft On Ground</span><span class="kpi-ic">&#9888;</span></div>
-        <div class="kpi-value">${aogActive.length}</div><div class="kpi-sub">active AOG events</div>
-        <div class="spark">${aogActive.length > 0 ? spark([30,45,38,55,70,80]) : spark([90,85,90,88,92,95])}</div></div>
-      <div class="kpi accent"><div class="kpi-top"><span class="kpi-label">Stock Value</span><span class="kpi-ic">&#128181;</span></div>
-        <div class="kpi-value">$${(stockValue / 1000).toFixed(1)}<span class="u">K</span></div><div class="kpi-sub">rotable + expendable</div>
-        <div class="spark">${spark([60,62,58,66,64,70])}</div></div>
-      <div class="kpi"><div class="kpi-top"><span class="kpi-label">AI Forecast Accuracy</span><span class="kpi-ic">&#9680;</span></div>
-        <div class="kpi-value">87<span class="u">%</span></div><div class="kpi-sub">90-day rolling</div>
-        <div class="spark">${spark([70,75,72,80,84,87,87])}</div></div>
-      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Open Requisitions</span><span class="kpi-ic">&#8674;</span></div>
-        <div class="kpi-value">${STORE.reqs.filter((r) => r.step < 3).length}</div><div class="kpi-sub">across all departments</div>
-        <div class="spark">${spark([40,45,43,50,48,42])}</div></div>
-      <div class="kpi ${risk ? "warn" : ""}"><div class="kpi-top"><span class="kpi-label">Shelf-Life Alerts</span><span class="kpi-ic">&#9881;</span></div>
-        <div class="kpi-value">${risk}</div><div class="kpi-sub">expiry within 60 days</div>
-        <div class="spark">${spark([20,20,20,20,60,100])}</div></div>
-      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Low Stock Items</span><span class="kpi-ic">&#9888;</span></div>
-        <div class="kpi-value">${lowStock.length}</div><div class="kpi-sub">below AI reorder point</div>
-        <div class="spark">${spark([40,50,60,70,60,55])}</div></div>
-    </div>
-    <div class="grid">${panelChart("Issues by ATA Chapter", "chartAta")}${panelChart("AI Demand — Actual vs Forecast", "chartDemand")}</div>
-    <div class="grid">${panelChart("Stock on Hand vs Reorder", "chartStock")}${panelChart("AOG Averted by Predictive AI", "chartAogAverted")}</div>
-    <div class="panel"><div class="panel-head"><div class="panel-title">Recent activity <span class="dim">live loop</span></div></div>
-      <div class="panel-body" id="activityFeed">${activityFeedHTML()}</div></div>`;
-  renderCharts();
-}
-
+function pauseHero() {}
 function panelChart(title, id) {
   return `<div class="panel"><div class="panel-head"><div class="panel-title">${title}</div></div><div class="panel-body"><canvas id="${id}" height="120"></canvas></div></div>`;
 }
@@ -187,52 +124,6 @@ function closeModal(e) {
   stopScanner();
   $("modalRoot").innerHTML = "";
 }
-function viewRetail() {
-  const items = Object.keys(CONSUMER_DB).map((code) => ({ code, product: CONSUMER_DB[code], mfr: RETAIL_DB[CONSUMER_DB[code].mfr] || null }));
-  const brands = new Set(items.map((i) => i.product.brand));
-  const origins = new Set(items.map((i) => (i.mfr ? i.mfr.country : "")).filter(Boolean));
-  const low = Math.min(...items.map((i) => i.product.price)), high = Math.max(...items.map((i) => i.product.price));
-  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
-  const flagOf = (c) => c === "Zimbabwe" ? "🇿🇼" : c === "Italy" ? "🇮🇹" : c === "South Africa" ? "🇿🇦" : "🌍";
-  const qHtml = (v) => v.replace(/</g, "&lt;");
-  const drawer = (list) => list.map((i) => `
-    <button class="r-card" onclick="retailInspect('${i.code}')">
-      <div class="r-card-top"><span class="r-emoji">🛒</span><span class="tag ${i.mfr && i.mfr.country === "Zimbabwe" ? "info" : "violet"}">${flagOf(i.mfr ? i.mfr.country : "")} ${esc(i.mfr ? i.mfr.country : "origin traced")}</span></div>
-      <div class="r-name">${esc(i.product.name)}</div>
-      <div class="r-brand">${esc(i.product.brand)} · ${esc(i.product.category)}</div>
-      <div class="r-foot"><span class="r-price">$${i.product.price.toFixed(2)}</span><span class="r-aisle">📍 ${esc(i.product.aisle)}</span></div>
-    </button>`).join("");
-  $("viewBody").innerHTML = `
-    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);max-width:820px">
-      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Catalog Items</span><span class="kpi-ic">&#128722;</span></div><div class="kpi-value">${items.length}</div><div class="kpi-sub">sample retail registry</div><div class="spark"></div></div>
-      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Brands</span><span class="kpi-ic">&#127871;</span></div><div class="kpi-value">${brands.size}</div><div class="kpi-sub">consumer makers</div><div class="spark"></div></div>
-      <div class="kpi"><div class="kpi-top"><span class="kpi-label">Origin Countries</span><span class="kpi-ic">&#127760;</span></div><div class="kpi-value">${origins.size}</div><div class="kpi-sub">from GS1 + labels</div><div class="spark"></div></div>
-      <div class="kpi accent"><div class="kpi-top"><span class="kpi-label">Price Range</span><span class="kpi-ic">&#128176;</span></div><div class="kpi-value">$${low.toFixed(2)}<span class="u">–$${high.toFixed(2)}</span></div><div class="kpi-sub">USD retail</div><div class="spark"></div></div>
-    </div>
-    <div class="rbar"><input id="rSearch" class="scan-input" placeholder="Search name, brand, aisle or origin…" oninput="retailGrep(this.value)"><div class="rbar-count">${items.length} items · scan any GTIN to resolve</div></div>
-    <div id="rGrid" class="r-grid">${drawer(items)}</div>`;
-}
-function retailGrep(v) {
-  const q = String(v || "").toLowerCase().trim();
-  const items = Object.keys(CONSUMER_DB).map((code) => ({ code, product: CONSUMER_DB[code], mfr: RETAIL_DB[CONSUMER_DB[code].mfr] || null }));
-  const hit = items.filter((i) => !q || [i.product.name, i.product.brand, i.product.category, i.product.aisle, (i.mfr ? i.mfr.country : "")].join(" ").toLowerCase().includes(q));
-  const drawer = (list) => list.map((i) => `
-    <button class="r-card" onclick="retailInspect('${i.code}')">
-      <div class="r-card-top"><span class="r-emoji">🛒</span><span class="tag violet">${esc(i.mfr ? i.mfr.country : "")}</span></div>
-      <div class="r-name">${esc(i.product.name)}</div>
-      <div class="r-brand">${esc(i.product.brand)} · ${esc(i.product.category)}</div>
-      <div class="r-foot"><span class="r-price">$${i.product.price.toFixed(2)}</span><span class="r-aisle">📍 ${esc(i.product.aisle)}</span></div>
-    </button>`).join("");
-  const g = $("rGrid");
-  if (g) g.innerHTML = hit.length ? drawer(hit) : `<div class="empty" style="padding:24px">No catalog item matches <b>${qHtml(v)}</b> — that barcode is simply not loaded in this sample registry.</div>`;
-}
-function retailInspect(code) {
-  const a = analyzeCode(code, { format: "MANUAL" });
-  $("viewBody").innerHTML = `<div class="scan-kicker"><span class="tag violet">RETAIL CATALOG</span> GTIN <span class="pn">${esc(code)}</span></div>
-    ${renderAnalysis(a, { format: "MANUAL" })}
-    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center"><button class="btn btn-sm" onclick="viewRetail()">← Back to catalog</button><button class="btn btn-sm" onclick="manualScan('${esc(code)}')">Rescan as store part</button></div>`;
-}
-
 function renderAnalysis(a, meta) {
   const openActs = (pn) => `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
@@ -726,35 +617,7 @@ function scanPassport() {
   route("#passport");
 }
 /* ---------------- Reports ---------------- */
-function viewReports() {
-  $("viewSub").textContent = "Executive analytics — spend, velocity, reliability and compliance posture.";
-  $("viewActions").innerHTML = `<button class="btn" onclick="exportReport()">&#8681; Export CSV</button>`;
-  $("viewBody").innerHTML = `
-    <div class="kpi-grid">
-      <div class="kpi"><div class="kpi-label">MRO Spend (30d)</div><div class="kpi-value">$218<span class="u">K</span></div><div class="kpi-sub">&#8595; 12% vs AI forecast baseline</div></div>
-      <div class="kpi accent"><div class="kpi-label">AOG Cost Avoided</div><div class="kpi-value">$94<span class="u">K</span></div><div class="kpi-sub">predictive alerting this quarter</div></div>
-      <div class="kpi"><div class="kpi-label">Pick-to-Issue Time</div><div class="kpi-value">11<span class="u">m</span></div><div class="kpi-sub">down from 47m at go-live</div></div>
-      <div class="kpi"><div class="kpi-label">Inventory Accuracy</div><div class="kpi-value">99.2<span class="u">%</span></div><div class="kpi-sub">cycle-count reconciled</div></div>
-    </div>
-    <div class="grid">
-      ${panelChart("Monthly spend by ATA chapter", "chartSpend")}
-      ${panelChart("Fill-rate performance", "chartFill")}
-    </div>`;
-  try {
-    killChart("chartSpend");
-    charts.chartSpend = new Chart($("chartSpend"), { type: "bar", data: {
-      labels: ["Jan","Feb","Mar","Apr","May","Jun"],
-      datasets: [{ label: "Spend ($K)", data: [187, 164, 209, 198, 231, 218], backgroundColor: "#3f9bff", borderRadius: 6 }]
-    }, options: baseOpts({ labels: false }) });
-    killChart("chartFill");
-    charts.chartFill = new Chart($("chartFill"), { type: "line", data: {
-      labels: ["Jan","Feb","Mar","Apr","May","Jun"],
-      datasets: [
-        { label: "Fill rate %", data: [78, 83, 87, 91, 95, 97], borderColor: "#18c98d", tension: 0.35, fill: true, backgroundColor: "rgba(24,201,141,0.1)" },
-        { label: "Target", data: [95, 95, 95, 95, 95, 95], borderColor: "#8496b4", borderDash: [5,5], pointRadius: 0 }
-      ] }, options: baseOpts() });
-  } catch (err) { console.warn("Report charts skipped:", err); }
-}
+function viewReports() { viewLogistics(); }
 
 function exportReport() {
   const csv = "Part,Stock,Min,Status\n" + STORE.parts.map((p) => `${p.pn},${p.stock},${p.min},${p.stock < p.min ? "REORDER" : "OK"}`).join("\n");

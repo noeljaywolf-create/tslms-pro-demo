@@ -15,7 +15,7 @@ function seedData() {
   base.forEach((b) => addReq(b.pn, b.qty, b.wo, b.reg, b.urgency, b.step, b.t));
   // Active AOG
   STORE.aog.push({ ref: "AOG-88214", pn: "BSC-64-73221", reg: "Z-WPV", wo: "WO-24518", urgency: "AOG", step: 0, t: 8 });
-  pushEvent("AOG","AOG-88214 raised for Z-WPV — brake assembly required, aircraft on ground","danger",now());
+  pushEvent("danger","AOG-88214 raised","Z-WPV — brake assembly required, aircraft on ground","danger");
 }
 
 let reqSeq = 24460;
@@ -75,10 +75,10 @@ function doLogin(user, pass) {
   $("userName").textContent = u.name;
   $("userRole").textContent = u.title;
   $("avatar").textContent = u.name.split(" ").map((w) => w[0]).join("").slice(0, 2);
+  if (!STORE.reqs.length) seedData();
   renderNav();
   renderMobileNav();
   route(location.hash || "#dashboard");
   toast("ok", `Welcome back, ${u.name.split(" ")[0]}`, `Signed in as ${u.title}`);
-  seedData();
   renderNotifs();
 }

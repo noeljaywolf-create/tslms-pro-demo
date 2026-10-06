@@ -8,48 +8,9 @@
 /* Sample consumer-goods registry so real-world barcodes (oil bottles, groceries,
    toiletries…) resolve to a product + maker. Uses GS1 "restricted-distribution"
    prefix 20 (safe for demo items) with valid check digits. */
-const RETAIL_DB = {
-  goldenfields: { key: "goldenfields", name: "GoldenFields Edible Oils", short: "GFE", country: "Zimbabwe", focus: ["Edible oils", "Fats"], verified: false, trust: 3.6, sample: true, ref: "RZ/2000/001" },
-  "olive-md": { key: "olive-md", name: "MareTre Olivari", short: "MTO", country: "Italy", focus: ["Olive oils"], verified: false, trust: 3.9, sample: true, ref: "RZ/2000/002" },
-  sunray: { key: "sunray", name: "SunRay Mills", short: "SRM", country: "Zimbabwe", focus: ["Soybean oils", "Maize"], verified: false, trust: 3.5, sample: true, ref: "RZ/2000/003" },
-  cleapure: { key: "cleapure", name: "CleaPure Consumer Brands", short: "CPB", country: "Zimbabwe", focus: ["Personal care", "Home goods"], verified: false, trust: 3.4, sample: true, ref: "RZ/2000/004" },
-  blueburst: { key: "blueburst", name: "BlueBurst Beverages", short: "BBV", country: "Zimbabwe", focus: ["Soft drinks", "Juices"], verified: false, trust: 3.5, sample: true, ref: "RZ/2000/005" },
-  aquavale: { key: "aquavale", name: "AquaVale Springs", short: "AVS", country: "Zimbabwe", focus: ["Mineral water"], verified: false, trust: 3.7, sample: true, ref: "RZ/2000/006" },
-  dairyhigh: { key: "dairyhigh", name: "DairyHigh Producers", short: "DHP", country: "Zimbabwe", focus: ["Dairy", "Margarine"], verified: false, trust: 3.6, sample: true, ref: "RZ/2000/007" },
-  nutrich: { key: "nutrich", name: "NutRich Foods", short: "NRF", country: "Zimbabwe", focus: ["Spreads", "Snacks"], verified: false, trust: 3.4, sample: true, ref: "RZ/2000/008" },
-  sugarc: { key: "sugarc", name: "SugArc Refineries", short: "SAR", country: "Zimbabwe", focus: ["Sugar", "Sweeteners"], verified: false, trust: 3.5, sample: true, ref: "RZ/2000/009" },
-  millgood: { key: "millgood", name: "MillGood Grains", short: "MGG", country: "Zimbabwe", focus: ["Maize meal", "Grains"], verified: false, trust: 3.6, sample: true, ref: "RZ/2000/010" },
-  trafoods: { key: "trafoods", name: "TRA Foods SA", short: "TRF", country: "South Africa", focus: ["Rice", "Pasta"], verified: false, trust: 3.5, sample: true, ref: "RZ/2000/011" },
-  saltline: { key: "saltline", name: "SaltLine Foods", short: "SLF", country: "Zimbabwe", focus: ["Salt", "Seasonings"], verified: false, trust: 3.3, sample: true, ref: "RZ/2000/012" },
-  sudzy: { key: "sudzy", name: "Sudzy Homecare", short: "SZY", country: "Zimbabwe", focus: ["Soap", "Detergents"], verified: false, trust: 3.4, sample: true, ref: "RZ/2000/013" }
-};
-const CONSUMER_ITEMS = [
-  ["Sunflower Cooking Oil 5L", "GoldenFields", "goldenfields", "Oils & Fats", 18.5, "Aisle 1 · Cooking Oils"],
-  ["Extra Virgin Olive Oil 1L", "MareTre", "olive-md", "Oils & Fats", 14.99, "Aisle 1 · Cooking Oils"],
-  ["Corn Oil 2L", "GoldenFields", "goldenfields", "Oils & Fats", 8.9, "Aisle 1 · Cooking Oils"],
-  ["Soybean Fine Oil 3L", "SunRay Mills", "sunray", "Oils & Fats", 10.5, "Aisle 1 · Cooking Oils"],
-  ["Cooking Oil 750ml", "CleaPure", "cleapure", "Oils & Fats", 3.2, "Aisle 1 · Cooking Oils"],
-  ["Sparkling Cola 330ml", "BlueBurst", "blueburst", "Beverages", 1.5, "Aisle 4 · Beverages"],
-  ["Orange Juice 1L", "BlueBurst", "blueburst", "Beverages", 2.8, "Aisle 4 · Beverages"],
-  ["Natural Spring Water 500ml", "AquaVale", "aquavale", "Beverages", 0.9, "Aisle 4 · Beverages"],
-  ["Whole Milk 1L", "DairyHigh", "dairyhigh", "Dairy", 1.8, "Aisle 3 · Dairy & Chilled"],
-  ["Margarine 500g", "DairyHigh", "dairyhigh", "Dairy", 2.3, "Aisle 3 · Dairy & Chilled"],
-  ["Peanut Butter 400g", "NutRich", "nutrich", "Food", 3.6, "Aisle 5 · Pantry"],
-  ["White Sugar 1kg", "SugArc", "sugarc", "Food", 2.1, "Aisle 5 · Pantry"],
-  ["Maize Meal 10kg", "MillGood", "millgood", "Food", 11.9, "Aisle 5 · Pantry"],
-  ["Rice 5kg", "TRA Foods", "trafoods", "Food", 9.5, "Aisle 5 · Pantry"],
-  ["Cooking Salt 500g", "SaltLine", "saltline", "Food", 0.85, "Aisle 5 · Pantry"],
-  ["Bath Soap 3-pack", "Sudzy", "sudzy", "Home Care", 2.4, "Aisle 6 · Home Care"],
-  ["Shampoo 250ml", "CleaPure", "cleapure", "Personal Care", 4.2, "Aisle 6 · Personal Care"],
-  ["Hand Soap 500ml", "CleaPure", "cleapure", "Personal Care", 3.1, "Aisle 6 · Personal Care"]
-];
+// Consumer product registry removed from the aviation engineering workspace.
+const RETAIL_DB = {};
 const CONSUMER_DB = {};
-(function buildConsumerDb() {
-  CONSUMER_ITEMS.forEach((it, i) => {
-    const body = "2000" + String(i + 1).padStart(8, "0");
-    CONSUMER_DB[body + gtinCheckDigit(body)] = { name: it[0], brand: it[1], mfr: it[2], category: it[3], price: it[4], aisle: it[5] };
-  });
-})();
 function upcEexpand(u8) {
   /* UPC-E (8-digit compact UPC-A) -> 12-digit UPC-A, per GS1/GTIN-12 conversion */
   if (!/^\d{8}$/.test(u8)) return null;
