@@ -41,3 +41,5 @@
 .tag.danger {color:#a62a28;}
 .digital-tag h2 {border-bottom:3px solid #dfbd2d;padding-bottom:12px;margin-bottom:12px;}
 @media(max-width:768px){.workflow-strip {grid-template-columns:1fr 1fr;}.rate-grid {grid-template-columns:1fr;}.form-grid {grid-template-columns:1fr;}}
+
+.eng-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}.form-grid textarea, .modal textarea{width:100%;min-height:88px;background:var(--surface,#fff);color:inherit;border:1px solid var(--border,#d6ded8);border-radius:8px;padding:10px;font:inherit}.eng-panel{margin-bottom:20px}
