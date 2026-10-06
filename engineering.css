@@ -1,5 +1,5 @@
 /* Engineering visual system: navy navigation, bright technical workspace. */
-:root { --bg:#f2f5fa;--bg-2:#101e35;--panel:#fff;--panel-2:#f6f8fc;--line:#e2e8f0;--line-2:#c9d5e5;--txt:#1c2d45;--dim:#63748c;--dimmer:#7e8ea4;--accent:#2166df;--accent-2:#2166df;--green:#16836b;--amber:#ac7017;--red:#c94747;--radius:12px;--shadow:0 18px 50px #11264424;--ink:#1c2d45; }
+:root { --bg:#f2f5fa;--bg-2:#101e35;--panel:#fff;--panel-2:#f6f8fc;--line:#e2e8f0;--line-2:#c9d5e5;--txt:#1c2d45;--dim:#63748c;--dimmer:#7e8ea4;--accent:#197347;--accent-2:#197347;--green:#16836b;--amber:#ac7017;--red:#c94747;--radius:12px;--shadow:0 18px 50px #11264424;--ink:#1c2d45; }
 body { background:var(--bg); }
 .sidebar { width:252px;border:0;background:#101e35;color:#e5edf8; }
 .sidebar .side-title small,.sidebar .side-user-role,.sidebar .nav-link { color:#acbbcf; }
@@ -24,7 +24,7 @@ body { background:var(--bg); }
 .panel-body { padding:12px 20px 20px; }
 .btn { background:#fff;color:#334761;border-color:#d6e0ed;font-weight:600; }
 .btn:hover { background:#eef4fc;color:#205ac0; }
-.btn-accent,.btn-primary { background:#2166df;color:#fff;border-color:#2166df;box-shadow:none; }
+.btn-accent,.btn-primary { background:#197347;color:#fff;border-color:#197347;box-shadow:none; }
 .btn-accent:hover,.btn-primary:hover { background:#1957c2;color:#fff; }
 .kpi { background:#fff;box-shadow:none;padding:20px;border-color:#e2e8f0; }
 .kpi-value { font-size:32px;font-weight:700;letter-spacing:-1px; }
@@ -82,7 +82,7 @@ button.attention-row:hover { background:#f7f9fc; }
 .ata-chapter>span { background:#eef3fb;color:#3466ab;border-radius:6px;padding:7px;font-family:var(--mono);font-size:12px; }
 .ata-chapter b { font-size:11px; }
 .ata-chapter small { display:block;font-size:10px;color:var(--dim); }
-.ata-chapter.selected { border-color:#2166df;background:#eef5ff; }
+.ata-chapter.selected { border-color:#197347;background:#eef5ff; }
 .modal,.notif-panel,.toast { background:#fff; }
 .modal input,.modal select,.search-box,.login-card input { background:#f8fafd;color:var(--txt);border-color:var(--line-2); }
 .login-brand { background:linear-gradient(130deg,#112544,#254e7c);color:#fff; }
@@ -91,10 +91,10 @@ button.attention-row:hover { background:#f7f9fc; }
 .login-panel { background:#f2f5fa; }
 .login-card { background:#fff;box-shadow:0 18px 55px #102b4c0d; }
 .role-card { background:#f7f9fd;color:var(--txt);border-color:var(--line); }
-.role-card.active { background:#eaf2ff;border-color:#2166df; }
+.role-card.active { background:#eaf2ff;border-color:#197347; }
 .role-name { color:var(--txt); }
 .mobile-nav { background:#fff;border-color:var(--line); }
-.mobile-nav .nav-link.active { color:#2166df;background:#edf4ff; }
+.mobile-nav .nav-link.active { color:#197347;background:#edf4ff; }
 @media(min-width:1500px) { .engineering-banner { padding:40px; }.engineering-banner h2 { font-size:35px; } }
 @media(max-width:1100px) { .content { padding:24px; }.fleet-grid { grid-template-columns:1fr; }.aircraft-card { display:block; }.engineering-banner { padding:26px; }.banner-emblem { min-width:130px; }.ata-layout { grid-template-columns:190px minmax(0,1fr); }.engineering-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:768px) { .content { padding:20px 14px 90px; }.sidebar { width:270px; }.topbar { padding:12px 14px; }.view-title h2 { font-size:23px; }.view-actions { flex-wrap:wrap; }.engineering-banner { padding:24px; }.engineering-banner h2 { font-size:25px; }.banner-emblem { display:none; }.engineering-grid { grid-template-columns:1fr; }.section-label>span { display:none; }.engineering-toolbar { flex-direction:column; }.ata-layout { grid-template-columns:1fr; }.ata-chapters { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:235px; }.engineering-kpis { gap:10px; }.kpi { padding:16px; }.kpi-label { font-size:9px; }.kpi-value { font-size:29px; }.login-brand h1 { font-size:31px; } }

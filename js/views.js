@@ -28,7 +28,7 @@ function renderChartsNow() {
     killChart("chartAta");
     charts.chartAta = new Chart($("chartAta"), { type: "bar", data: {
       labels: ["AB 21","AP 24","FC 27","FUEL 28","LDG 32","DRS 52","ENG 72","START 80"],
-      datasets: [{ label: "Issues (30d)", data: [18, 7, 15, 22, 31, 9, 24, 6], backgroundColor: ["#3f9bff","#9a7bff","#f5b12d","#18c98d","#f04e4e","#25c4e6","#e06aa8","#22c55e"], borderRadius: 6 }],
+      datasets: [{ label: "Issues (30d)", data: [18, 7, 15, 22, 31, 9, 24, 6], backgroundColor: ["#197347","#b4982a","#c6a42c","#18c98d","#f04e4e","#789447","#e06aa8","#22c55e"], borderRadius: 6 }],
     }, options: baseOpts({ labels: false }) });
   }
   if ($("chartDemand")) {
@@ -36,8 +36,8 @@ function renderChartsNow() {
     charts.chartDemand = new Chart($("chartDemand"), { type: "line", data: {
       labels: ["W1","W2","W3","W4","W5","W6","W7","W8"],
       datasets: [
-        { label: "Actual", data: [12, 9, 14, 11, 16, 13, 15, 12], borderColor: "#3f9bff", backgroundColor: "rgba(63,155,255,0.08)", fill: true, tension: 0.35, pointRadius: 3 },
-        { label: "AI Forecast", data: [10, 12, 15, 14, 18, 17, 22, 24], borderColor: "#f5b12d", borderDash: [6,4], tension: 0.35, pointRadius: 3, pointBackgroundColor: "#f5b12d" }
+        { label: "Actual", data: [12, 9, 14, 11, 16, 13, 15, 12], borderColor: "#197347", backgroundColor: "rgba(25,115,71,0.08)", fill: true, tension: 0.35, pointRadius: 3 },
+        { label: "AI Forecast", data: [10, 12, 15, 14, 18, 17, 22, 24], borderColor: "#c6a42c", borderDash: [6,4], tension: 0.35, pointRadius: 3, pointBackgroundColor: "#c6a42c" }
       ] }, options: baseOpts() });
   }
   if ($("chartStock")) {
@@ -45,7 +45,7 @@ function renderChartsNow() {
     charts.chartStock = new Chart($("chartStock"), { type: "bar", data: {
       labels: ["Brake","O-ring","Fuel Pmp","Hub","Gen","Seal"],
       datasets: [
-        { label: "On hand", data: [2, 8, 12, 1, 1, 5], backgroundColor: "#3f9bff", borderRadius: 5 },
+        { label: "On hand", data: [2, 8, 12, 1, 1, 5], backgroundColor: "#197347", borderRadius: 5 },
         { label: "Reorder", data: [6, 6, 5, 3, 2, 4], backgroundColor: "#f04e4e", borderRadius: 5 }
       ] }, options: baseOpts({ labels: true }) });
   }
@@ -290,9 +290,9 @@ function partSheetMini(p) {
 }
 /* ---------------- Bin Map ---------------- */
 const RACKS = [
-  { id: 1, name: "Rack A — Systems & Avionics", color: "#3f9bff", cols: 9, bins: [["21-01",14,18],["22-02",9,9],["24-03",7,5],["26-04",16,16],["27-05",11,11],["28-06",3,8],["29-07",12,12],["30-08",8,6],["31-09",15,15]] },
-  { id: 2, name: "Rack B — Landing Gear", color: "#f5b12d", cols: 8, bins: [["32-01",2,9],["32-02",6,6],["32-03",14,10],["32-04",1,8],["32-05",9,9],["32-06",4,4],["32-07",7,5],["32-08",11,11]] },
-  { id: 3, name: "Rack C — Engines & Interior", color: "#9a7bff", cols: 8, bins: [["52-01",10,10],["56-02",13,13],["72-03",6,4],["73-04",9,9],["74-05",5,3],["76-06",12,12],["78-07",8,8],["80-08",7,5]] }
+  { id: 1, name: "Rack A — Systems & Avionics", color: "#197347", cols: 9, bins: [["21-01",14,18],["22-02",9,9],["24-03",7,5],["26-04",16,16],["27-05",11,11],["28-06",3,8],["29-07",12,12],["30-08",8,6],["31-09",15,15]] },
+  { id: 2, name: "Rack B — Landing Gear", color: "#c6a42c", cols: 8, bins: [["32-01",2,9],["32-02",6,6],["32-03",14,10],["32-04",1,8],["32-05",9,9],["32-06",4,4],["32-07",7,5],["32-08",11,11]] },
+  { id: 3, name: "Rack C — Engines & Interior", color: "#b4982a", cols: 8, bins: [["52-01",10,10],["56-02",13,13],["72-03",6,4],["73-04",9,9],["74-05",5,3],["76-06",12,12],["78-07",8,8],["80-08",7,5]] }
 ];
 const BINMATCH = { "28-06": "GEN-24-410", "73-04": "GST-304-88", "32-01": "BSC-64-73221", "74-05": "SEAL-74-061" };
 
@@ -301,9 +301,9 @@ function viewBins() {
   $("viewActions").innerHTML = `<span class="chip">Module 1</span><span class="chip">Module 8 <b>IoT</b></span>`;
   $("viewBody").innerHTML = `
     <div class="legend">
-      <span><i class="swatch" style="background:#3f9bff"></i> ATA 21–36 Systems</span>
-      <span><i class="swatch" style="background:#f5b12d"></i> ATA 32 Landing Gear</span>
-      <span><i class="swatch" style="background:#9a7bff"></i> ATA 52+ Interior / 72–80 Engine</span>
+      <span><i class="swatch" style="background:#197347"></i> ATA 21–36 Systems</span>
+      <span><i class="swatch" style="background:#c6a42c"></i> ATA 32 Landing Gear</span>
+      <span><i class="swatch" style="background:#b4982a"></i> ATA 52+ Interior / 72–80 Engine</span>
       <span><i class="swatch" style="background:transparent;border:1px dashed #f04e4e"></i> Below reorder</span>
     </div>
     <div id="rackArea"></div>
@@ -427,7 +427,7 @@ function advanceAog(ref) {
   a.step++;
   if (a.step === 1) pushEvent("info", a.ref + " picked", `${a.pn} picked at store`, "info");
   if (a.step === 2) pushEvent("ok", a.ref + " issued", `${a.pn} released to ${a.reg}`, "ok");
-  if (a.step === 3) { pushEvent("ok", a.ref + " installed", `${a.pn} installed — WO ${a.wo} cleared`, "ok"); toast("ok", "AOG resolved", `${a.ref} — ${a.pn} installed on ${a.reg}. Aircraft cleared for dispatch.`); }
+  if (a.step === 3) { pushEvent("ok", a.ref + " installed", `${a.pn} installed — WO ${a.wo} cleared`, "ok"); toast("ok", "AOG resolved", `${a.ref} — ${a.pn} installed on ${a.reg}. Installation recorded; maintenance release remains a separate process.`); }
   else toast("info", `Step advanced`, `${a.ref} is now ${label[a.step]}.`, "info");
   route(location.hash);
 }
@@ -535,8 +535,8 @@ function viewForecast() {
     charts.chartPred = new Chart($("chartPred"), { type: "line", data: {
       labels,
       datasets: [
-        { label: "Demand (hist + forecast)", data: [...hist, ...fc], borderColor: "#f5b12d", backgroundColor: "rgba(245,177,45,0.10)", fill: true, tension: 0.35 },
-        { label: "Stock on hand (proj.)", data: top.f.stockProj, borderColor: "#3f9bff", tension: 0.35 },
+        { label: "Demand (hist + forecast)", data: [...hist, ...fc], borderColor: "#c6a42c", backgroundColor: "rgba(245,177,45,0.10)", fill: true, tension: 0.35 },
+        { label: "Stock on hand (proj.)", data: top.f.stockProj, borderColor: "#197347", tension: 0.35 },
         { label: "Safety stock", data: top.f.safetyProj, borderColor: "#f04e4e", borderDash: [6,5], pointRadius: 0 }
       ] }, options: baseOpts() });
   } catch (err) { console.warn("Forecast chart skipped:", err); }

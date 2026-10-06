@@ -345,8 +345,8 @@ function renderAssistChart(id, f) {
     data: {
       labels,
       datasets: [
-        { label: "Demand", data: [...f.history.slice(-8), ...f.forecast], borderColor: "#f5b12d", backgroundColor: "rgba(245,177,45,0.10)", fill: true, tension: 0.35, pointRadius: 2 },
-        { label: "Stock projection", data: f.stockProj, borderColor: "#3f9bff", tension: 0.35, pointRadius: 2 },
+        { label: "Demand", data: [...f.history.slice(-8), ...f.forecast], borderColor: "#c6a42c", backgroundColor: "rgba(245,177,45,0.10)", fill: true, tension: 0.35, pointRadius: 2 },
+        { label: "Stock projection", data: f.stockProj, borderColor: "#197347", tension: 0.35, pointRadius: 2 },
         { label: "Safety stock", data: f.safetyProj, borderColor: "#f04e4e", borderDash: [6, 5], pointRadius: 0 }
       ]
     },
