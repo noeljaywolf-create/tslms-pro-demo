@@ -30,3 +30,12 @@ Digital tags mirror the fields in the supplied Air Zimbabwe serviceable-tag exam
 Demo engineers: t.ndlovu / eng123 and p.chirwa / eng123. Every demo account has its own profile. Client-side role checks are a workflow demonstration, not production authentication.
 
 Research reference: [EASA technical records guidance](https://www.easa.europa.eu/en/the-agency/faqs/technical-records), [EASA continuing airworthiness records](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-continuing-airworthiness?erules-id=ERULES-1963177438-1031). Total life and time since scheduled maintenance/overhaul are separate; component removal limits are separate from aircraft C-check planning.
+
+## Functional engineering workflows
+- Serialised component receipt increments stock and puts the serial in quarantine; Quality Inspector inspection is required before installation. Exhausted limits block approval and installation. Occupied aircraft positions block duplicate fitment. Removal returns the serial to quarantine, preserves counters, and increments stores stock.
+- Technical log tracks open defects and engineer rectification records. Grounded defects and scheduled checks contribute to aircraft technical holds.
+- Maintenance Outlook computes removal dates from adjustable planning rates (initial assumptions: 4 flight hours and 2 cycles/day), calendar limits and recorded remaining life; it drafts resource plans. Planned-flight assessments check the aircraft, active holds, open defects, and component limits. No dispatch approval is produced.
+- Export technical records downloads a JSON snapshot of the current fleet, component records, plans, movements, defects and audit history. Workflow data persists in localStorage on this browser; this is not a shared operational database.
+- The color palette uses green, gold, red and black inspired by the [official Air Zimbabwe logo](https://www.airzimbabwe.aero/wp-content/uploads/2026/03/air-zim-logo.png). UI hex values are contrast-adjusted approximations, not official brand-guide specifications.
+
+Presentation workflow: Stores Controller receives a component → Quality Inspector records inspection → Engineer installs it → Engineer records aircraft utilisation → Maintenance Outlook recalculates due dates → remove the component when needed and view the custody log. Demo accounts: m.faith / stores123, k.moyo / insp123, t.ndlovu / eng123.

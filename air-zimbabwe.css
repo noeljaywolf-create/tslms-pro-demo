@@ -1,0 +1,43 @@
+/* Palette inspired by the bird and wordmark on Air Zimbabwe's official logo.
+   UI shades are chosen for contrast; these are not claimed brand-guide values. */
+:root {--accent:#126c3c;--accent-2:#126c3c;--green:#126c3c;--amber:#ae7911;--red:#bf302f;--txt:#212722;--dim:#687168;--line:#e2e8e2;--line-2:#c9d5cb;--bg:#f5f7f3;--az-gold:#e7c43d;--az-black:#191d1a;}
+.sidebar {background:#18251e;border-top:4px solid var(--az-gold);}
+.sidebar .nav-link.active {background:#285d3d;border-left-color:#ebcd48;}
+.sidebar .nav-link:hover {background:#263e2e;}
+.sidebar .side-user {background:#263a2d;border-color:#405346;}
+.sidebar .side-foot {border-color:#3b4c40;}
+.sidebar .icon-btn {background:#344639;border-color:#4d6153;}
+.sidebar .nav-section {color:#a1b2a6;}
+.logo {background:linear-gradient(135deg,#126c3c,#20472e);border-bottom:3px solid #e7c43d;}
+.avatar {background:linear-gradient(135deg,#1b7041,#5d7958);}
+.engineering-banner,.login-brand {background:linear-gradient(115deg,#174e30,#277047);border-top:4px solid #e7c43d;border-bottom:3px solid #b53030;}
+.engineering-banner:after {border-color:#cde6b92e;}
+.eyebrow,.banner-emblem>small,.banner-emblem>span {color:#efd671;}
+.btn-accent,.btn-primary {background:#146b3c;border-color:#146b3c;color:#fff;}
+.btn-accent:hover,.btn-primary:hover {background:#0b512b;color:#fff;}
+.btn:hover {background:#eef6ed;color:#165c34;}
+.btn.btn-accent:hover {background:#0b512b;color:#fff;border-color:#0b512b;}
+.aircraft-symbol {color:#176b3e;background:#ecf5eb;}
+.tag.info {background:#eef4ec;border-color:#dce9d8;color:#376842;}
+.kpi.warn {border-top-color:#cfaf31;}
+.ata-chapter>span {color:#25623a;background:#eef4e9;}
+.ata-chapter.selected {border-color:#1a7842;background:#eef6e9;}
+.role-card.active {background:#f1f8ed;border-color:#187341;}
+.mobile-nav .nav-link.active {background:#eff6e9;color:#1d6a3d;}
+.workflow-strip {display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.workflow-strip span {padding:16px;border:1px solid #dbe5d9;border-left:3px solid #c2a428;border-radius:9px;background:white;font-size:11px;font-weight:600;}
+.lifecycle-actions {display:flex;gap:6px;flex-wrap:wrap;}
+.form-grid,.rate-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.rate-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+.rate-card {border:1px solid var(--line);padding:16px;border-radius:9px;background:#f8faf6;}
+.form-grid label,.rate-card label {display:block;color:var(--dim);font-size:11px;margin:9px 0 5px;}
+.form-grid input,.form-grid select,.rate-card input {width:100%;min-width:0;border:1px solid var(--line-2);border-radius:7px;background:#fff;color:var(--txt);padding:10px;font:inherit;font-size:12px;}
+.modal input[type=checkbox] {width:auto;display:inline;margin-right:7px;}
+.assessment {padding:18px;margin-top:16px;border-radius:10px;font-size:12px;}
+.assessment.hold {background:#fff5e6;border:1px solid #e9d1a1;color:#765215;}
+.assessment.clear {background:#eef8ed;border:1px solid #cde0c9;color:#235a34;}
+.assessment ul {padding-left:19px;margin-top:8px;}
+.side-brand .logo {font-size:10px;}
+.tag.danger {color:#a62a28;}
+.digital-tag h2 {border-bottom:3px solid #dfbd2d;padding-bottom:12px;margin-bottom:12px;}
+@media(max-width:768px){.workflow-strip {grid-template-columns:1fr 1fr;}.rate-grid {grid-template-columns:1fr;}.form-grid {grid-template-columns:1fr;}}
