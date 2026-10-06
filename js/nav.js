@@ -5,20 +5,10 @@
 
 function renderNav() {
   const nav = $("sideNav");
-  const menu = {
-    stores: [
-      { s: "Operations", items: [["#dashboard","Dashboard","&#9678;"],["#inventory","Inventory","&#9745;"],["#bins","Bin Map","&#9642;"],["#retail","Retail Catalog","&#128722;"],["#aog","AOG Desk","&#9888;", "aogBadge"],["#requisitions","Requisitions","&#8674;"],["#reports","Analytics","&#9661;"]] },
-      { s: "Intelligence", items: [["#assistant","AI Assistant","&#10052;"],["#forecast","AI Forecast","&#9680;"],["#passport","Parts Passport","&#9632;"]] }
-    ],
-    engineer: [
-      { s: "Maintenance", items: [["#dashboard","Dashboard","&#9678;"],["#aog","AOG Desk","&#9888;", "aogBadge"],["#requisitions","Requisitions","&#8674;"]] },
-      { s: "Intelligence", items: [["#assistant","AI Assistant","&#10052;"],["#forecast","AI Forecast","&#9680;"],["#passport","Parts Passport","&#9632;"]] }
-    ],
-    inspector: [
-      { s: "Quality", items: [["#dashboard","Dashboard","&#9678;"],["#compliance","Compliance","&#10003;"],["#reports","Audit Analytics","&#9661;"]] },
-      { s: "Traceability", items: [["#assistant","AI Assistant","&#10052;"],["#passport","Parts Passport","&#9632;"]] }
-    ]
-  };
+  const engineering = { s: "Aircraft Engineering", items: [["#dashboard","Engineering Overview","◈"],["#fleet","Fleet Management","✈"],["#components","Component Life","◷"],["#ata","ATA Chapters","▦"],["#aog","AOG Response","!","aogBadge"]] };
+  const stores = { s: "Technical Operations", items: [["#inventory","Technical Stores","▣"],["#bins","Storage & Bins","▤"],["#logistics","Logistics Intelligence","↗"],["#requisitions","Requisitions","⇢"]] };
+  const quality = { s: "Assurance & Intelligence", items: [["#compliance","Compliance","✓"],["#passport","Parts Traceability","⬡"],["#forecast","Demand Forecast","◔"],["#assistant","AI Assistant","✧"]] };
+  const menu = {stores:[engineering,stores,quality],engineer:[engineering,stores,quality],inspector:[engineering,{s:"Technical Stores",items:[["#inventory","Technical Stores","▣"],["#logistics","Logistics Intelligence","↗"]]},quality]};
   const aogCount = STORE.aog.filter((a) => a.step < 3).length;
   nav.innerHTML = (menu[session.role] || menu.stores).map((sec) => `
     <div class="nav-section">${sec.s}</div>
@@ -35,7 +25,7 @@ function renderNav() {
 const MOBILE_NAV = {
   stores: [["#dashboard", "Dashboard", "&#9678;"], ["#aog", "AOG", "&#9888;", "aogBadgeM"], ["__scan__", "Scan", "&#10052;"], ["#requisitions", "Requests", "&#8674;"]],
   engineer: [["#dashboard", "Dashboard", "&#9678;"], ["#aog", "AOG", "&#9888;", "aogBadgeM"], ["__scan__", "Scan", "&#10052;"], ["#requisitions", "Requests", "&#8674;"]],
-  inspector: [["#dashboard", "Dashboard", "&#9678;"], ["#reports", "Reports", "&#9661;"], ["__scan__", "Scan", "&#10052;"], ["#assistant", "AI", "&#10052;"]]
+  inspector: [["#dashboard", "Dashboard", "&#9678;"], ["#components", "Life", "◷"], ["__scan__", "Scan", "&#10052;"], ["#assistant", "AI", "&#10052;"]]
 };
 
 function renderMobileNav() {
@@ -63,7 +53,11 @@ function closeNav() {
 /* ---------------- Router ---------------- */
 /* Lazy wrappers so views defined in later scripts (ai.js) resolve without load-order errors */
 const VIEWS = {
-  dashboard: () => viewDashboard(),
+  dashboard: () => viewEngineeringDashboard(),
+  fleet: () => viewFleet(),
+  components: () => viewComponents(),
+  ata: () => viewAta(),
+  logistics: () => viewLogistics(),
   inventory: () => viewInventory(),
   bins: () => viewBins(),
   aog: () => viewAog(),
@@ -71,18 +65,24 @@ const VIEWS = {
   forecast: () => viewForecast(),
   compliance: () => viewCompliance(),
   passport: () => viewPassport(),
-  reports: () => viewReports(),
+  reports: () => viewLogistics(),
   assistant: () => viewAssistant(),
-  retail: () => viewRetail()
+  retail: () => viewInventory()
 };
 
 function route(hash) {
   closeNav();
-  const key = (hash || "#dashboard").replace("#", "");
+  let key = (hash || "#dashboard").replace("#", "");
+  if(key === "retail") key="inventory";
+  if(key === "reports") key="logistics";
+  if(!VIEWS[key]) key="dashboard";
+  pauseHero();
+  Object.keys(charts).forEach(killChart);
+  if(location.hash !== "#"+key) history.replaceState(null,"","#"+key);
   document.querySelectorAll(".nav-link").forEach((b) => b.classList.toggle("active", b.dataset.href === "#" + key));
-  const titles = { dashboard: "Operations Dashboard", inventory: "Inventory Control", bins: "Digital Bin & Storage Mapper", aog: "AOG Response Desk", requisitions: "Requisitions", forecast: "AI Predictive Intelligence", compliance: "Compliance & Certificates", passport: "Blockchain Parts Passport", reports: "Analytics & Reports", assistant: "AI Assistant", retail: "Retail Catalog" };
+  const titles = { dashboard: "Engineering Overview", fleet: "Fleet Management", components: "Component Life Tracking", ata: "ATA Chapters", logistics: "Logistics Intelligence", inventory: "Technical Stores", bins: "Digital Bin & Storage Mapper", aog: "AOG Response Desk", requisitions: "Requisitions", forecast: "AI Predictive Intelligence", compliance: "Compliance & Certificates", passport: "Parts Traceability", reports: "Logistics Intelligence", assistant: "AI Assistant", retail: "Technical Stores" };
   $("pageTitle").textContent = titles[key] || "Dashboard";
-  const view = VIEWS[key] || viewDashboard;
+  const view = VIEWS[key] || viewEngineeringDashboard;
   $("content").innerHTML = `<div class="view-head"><div class="view-title"><h2>${titles[key] || "Dashboard"}</h2><p id="viewSub"></p></div><div class="view-actions" id="viewActions"></div></div><div id="viewBody"></div>`;
   view();
 }

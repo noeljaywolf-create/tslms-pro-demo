@@ -1,105 +1,23 @@
-# TSLMS Pro — Aviation Technical Stores & Logistics Intelligence
+# TSLMS — Aircraft Engineering Workspace
 
-Professional, fully-interactive product simulation of an intelligent aviation technical stores platform for Air Zimbabwe. **100% static** — no server required — free to host on **GitHub Pages**.
+Static, offline-capable demonstration for aircraft engineering and technical stores.
 
-## What's inside (Pro version)
+## Modules
+- Engineering overview: technical holds, component alerts, stores shortages and activity.
+- Fleet management: aircraft records, maintenance tasks and utilisation entry.
+- Component life: serial-level flight hours, cycles and calendar limits, search, status filters and CSV export.
+- ATA chapters: linked parts, supply shortages, tracked component alerts and requisitions.
+- Logistics intelligence: existing Holt demand model, supply priorities and prefilled requisition drafts.
+- Technical stores, bin mapping, AOG response, requisitions, scanning, compliance and parts traceability.
 
-- **Role-based sign-in** with three demo accounts:
-  - `m.faith` / `stores123` — Stores Controller (full operations)
-  - `t.ndlovu` / `eng123` — Maintenance Engineer (maintenance + intelligence)
-  - `k.moyo` / `insp123` — Quality Inspector (compliance + audit)
-- **Role-aware navigation** — each role sees only its relevant modules
-- **Operations Dashboard** — 6 animated KPIs + 4 live charts + activity feed
-- **Inventory Control** — live searchable parts ledger with release certs and reorder flags
-- **Digital Bin & Storage Mapper** — clickable ATA colour-coded rack/bin grid (Module 1)
-- **AOG Response Desk** — kanban board (Requested → Picked → Issued → Installed) (Module 3)
-- **Requisitions** — full ledger + create modal
-- **AI Predictive Intelligence** — LightGBM + LSTM forecast charts and reorder suggestions (Module 6)
-- **Compliance & Certificates** — shelf-life control, FOD log, legal e-releases (Module 4)
-- **Blockchain Parts Passport** — chain-of-custody viewer (Module 7)
-- **Executive Analytics** — spend, fill-rate, AOG cost-avoidance + CSV export
-- **Intelligent Scanner** — four AI-powered modes:
-  - **Smart Auto** — continuous barcode/QR decoding from camera (works over HTTPS on GitHub Pages)
-  - **AI OCR** — Tesseract.js reads part numbers, serials and QR text straight off printed labels (no barcode needed), fuzzy-matched to inventory with a confidence score
-  - **Super Scan AI** — fusion mode: the decoder and live Tesseract OCR run on the **same camera feed** until a confident match; results carry a fused **EVIDENCE** block showing both decoder and OCR reads with match confidence
-  - **Manual entry** — smart lookup with nearest-part suggestions when no exact match exists
-- **Universal code decoding** — the scanner resolves any scanned/typed code to the exact item, and always tells you what the code itself says:
-  - **60+ part catalogue** with a resolution index: part numbers in any layout (`BSC-64-73221`, `BSC6473221`, lowercase), prefixed labels (`PN:…`, `P/N:…`, `BAR:…`, `SERIAL:…`), part names and shorthand aliases (`brake`, `pump`, `hub`…) all resolve to **EXACT 100%** part sheets
-  - **GS1-128 / AI barcodes** — `(01)GTIN (10)batch (21)serial (17)expiry…` are decoded field-by-field; the GTIN is validated and looked up
-  - **EAN-13 / UPC-A / EAN-8 / GTIN-14** — check-digit validation, GS1 prefix → country/region breakdown, and full readout even when the item isn't in the local catalogue (with closest parts, AOG or Register actions)
-  - **QR-JSON payloads** — structured data rendered as key/value fields and matched to inventory
-  - Symbology of the decoded code is displayed (QR Code, Code 128, EAN-13, DataMatrix…)
-- **AI fuzzy matching engine** — corrected Levenshtein-based part resolution, guarded to PN-like codes: typos, OCR confusions and prose (`p/n BSC 64 73221 wheel brake`) resolve to the right part with an `AI MATCH` confidence badge, while payloads (GS1/JSON) are never mis-matched
-- **Smart actions** — after any scan: Issue part, Raise AOG, or Register new part, right from the result sheet
-- **Manufacturer & origin intelligence (2040 AI scan)** — every scan answers *"who makes this?"*:
-  - **OEM resolution** — all catalogue parts trace automatically to their maker (Sterling Brake Systems, Fenz Hydraulik, Qualitron Power, Turbex Engineering, NovaAvionics, AeroFlow Systems, Harlock Precision and more) via ATA/PN family rules, shown as a **🛰️ MANUFACTURER INTELLIGENCE // 2040 TERMINAL** card with verified-OEM seal, country flag, assurance rating, confidence and fleet supply rows
-  - **GS1 company-prefix database** — GTIN/EAN/UPC prefixes resolve to a registered maker; unknown codes fall back to an **ORIGIN TRACE** (country decoded from the real GS1 prefix table)
-  - **Label-declared detection** — AI reads the company name out of any code: QR-JSON payloads (`{"company":"Boeing"}`), GS1 free-text AIs, or plain OCR of a label (`Parker Hannifin`, `Airbus`, `Rolls-Royce`…) and builds a full company profile with their parts on hand
-  - Company names can be scanned or typed directly to open a maker profile
-- **Retail & consumer-product intelligence — "reads any barcode, even an oil bottle"**:
-  - **14 symbologies** supported: QR, DataMatrix, Aztec, PDF417, MaxiCode, Code 128, Code 39, Code 93, Codabar, ITF, UPC-A, UPC-E, EAN-8, EAN-13
-  - Grocery, beverage, personal-care and home products (sunflower oil 5L, cola, spring water, milk, bath soap…) resolve to a **🛒 PRODUCT INTELLIGENCE // ANY BARCODE** card: product name, brand, category, GS1-validated GTIN, maker and origin — from a sample registry built on real GS1 restricted-distribution prefixes with valid check digits
-  - **UPC-E compact codes** are expanded to their full UPC-A form (GS1 conversion rules) before check-digit validation, so 8-digit retail barcodes validate correctly
-  - Retail scans clearly state *"Decoded a retail / consumer product — not an aviation stores part"* and show the maker profile instead of irrelevant aviation part suggestions; multi-channel **Super Scan AI** also resolves retail codes from OCR snapshots
-- **AI Assistant** (`AI Assistant` in the side nav) — natural-language interface to the store:
-  - **Real NLP intent engine** — understands "how much stock of brakes?", "forecast demand for pumps", "any AOG right now?", "order 2 GST-304-88 urgent", "issue 1 SEAL-74-061 to Z-WPV", "summary please"
-  - **Live model output** — Holt's-trend demand forecasts with stockout-day estimates and anomaly flags, rendered inline
-  - **Approved actions** — AI drafts requisitions, AOG raises and line issues; the store is never mutated until you click **Approve**
-- **TSLMS AI Core** (`ai.js`) — real client-side algorithms, reproducible and deterministic:
-  - Seeded demand model (mulberry32) → 12 weeks of per-part history
-  - Holt's linear-trend forecast (double exponential smoothing) with RMSE
-  - Rolling z-score anomaly detection
-  - Reorder intelligence — risk tiering (HIGH/MEDIUM/LOW/HEALTHY), days-to-stockout, suggested order quantity
-- **AI Forecast view rebuilt on the live model** — every part is risk-ranked from computed forecasts (no hardcoded numbers), with the top-risk part charted against safety stock
-- **Fully responsive** — professional phone/tablet shell: slide-in drawer navigation with hamburger toggle, role-aware **bottom navigation bar** (Dashboard / AOG / central Scan / Requests), bottom-sheet modals (full-height scanner), touch-sized controls, safe-area insets, and horizontal-scroll layouts for kanban, tables and the bin map
+Retail / food catalogue and financial dashboard / reports were removed. Legacy retail and reports links redirect to stores and logistics.
 
-## Run locally
+## Run
+Serve this directory with a static HTTP server, or open index.html. There is no build step. The scanner needs HTTPS or localhost for camera access.
 
-Open `index.html` in any browser. No build step and **no internet required** — Chart.js is bundled locally in `vendor/`.
+Select a demo role and sign in: m.faith / stores123, t.ndlovu / eng123, k.moyo / insp123.
 
-## Project structure
+## Data boundaries
+All aircraft identities, component limits, certifications, dates and demand are simulated. The counters and utilisation edits are held in memory and reset on refresh. Recording aircraft utilisation updates installed component counters only, not components in stores. Alerts use the earliest exhausted hour, cycle or calendar limit. The demo does not provide aircraft release approval or certified maintenance limits.
 
-```
-tslms-demo/
-  index.html            # App shell + login
-  styles.css            # TSLMS Pro UI kit
-  js/
-    core.js             # Global DOM helpers, catalogue seed, code utilities
-    data.js             # Static registries: store parts, OEM bank, country/GS1 tables, retail catalogue, racks & notifications
-    codes.js            # Code-resolution index + GS1 / GTIN / EAN / UPC decoding
-    intel.js            # Barcode inspection + analyzeCode (any barcode → part, retail product or manufacturer trace)
-    store.js            # Seed requisitions, notifications, toasts, auth
-    nav.js              # Role-based navigation and the view router
-    views.js            # All view renderers, shared cards/sheets, charts, modals
-    actions.js          # Store operations: issue, AOG, register, transfer, requisitions
-    scanner.js          # Camera scanner, Super Scan AI, OCR, manual lookup
-    boot.js             # Live simulation loop, login/event bindings, console handle
-  ai.js                 # TSLMS AI Core — demand model, Holt forecast, anomalies, reorder engine, NLP intent engine + assistant
-  vendor/
-    chart.umd.min.js    # Chart.js 4.4.3 (local copy — no CDN needed)
-    html5-qrcode.min.js # Barcode/QR camera scanner (local copy)
-    tesseract/          # AI OCR engine (local, offline)
-      tesseract.min.js  # Tesseract.js API
-      worker.min.js     # OCR worker
-      tesseract-core-simd.wasm(.js)  # WASM inference core
-      eng.traineddata.gz# English language model
-```
-
-> **OCR note:** the first Snapshot & Read loads ~12 MB of OCR engine (one-time, cached by the browser). Everything is local — no internet needed after files are in place.
-
-> **AI note:** the whole intelligence layer is deterministic and offline — forecasts are recomputed live from the seeded demand model, and the assistant's numerical answers are real arithmetic on the current `STORE`, not canned text.
-
-> **Scanning note:** the camera needs a **secure context (HTTPS)**. GitHub Pages is HTTPS, so it works there. The demo always falls back to **manual entry** if the camera is unavailable, and AI OCR still works on `file://` for pasted text via Manual. On phones, open the URL in your **normal browser (Safari or Chrome)** — in-app browsers (WhatsApp, Facebook, Instagram) block camera access. If the camera doesn't start, the scanner now shows the exact reason with a **Retry camera** button and permission guidance.
-
-## Host on GitHub Pages (free)
-
-1. Create a repo (e.g. `tslms-pro-demo`)
-2. Push `index.html`, `styles.css`, `js/`, `ai.js`, `README.md` to `main`
-3. Repo **Settings → Pages** → Source: *Deploy from a branch* → branch `main`, root `/`
-4. Live at `https://<your-username>.github.io/tslms-pro-demo/`
-
-## Stack reference (production target)
-
-The demo simulates the production architecture: TypeScript/Next.js SPA + Python FastAPI AI core (LightGBM + PyTorch LSTM forecasting), PostgreSQL + pgvector, LangGraph orchestration, Hyperledger Fabric passport, Azure/AKS, Langfuse observability.
-
-_Simulated data for demonstration only — no real inventory records are used._
+Deploy to GitHub Pages by uploading the source to the existing repository and publishing its root. This local revision has not been pushed or deployed.
