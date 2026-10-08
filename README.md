@@ -32,7 +32,7 @@ Demo engineers: t.ndlovu / eng123 and p.chirwa / eng123. Every demo account has 
 Research reference: [EASA technical records guidance](https://www.easa.europa.eu/en/the-agency/faqs/technical-records), [EASA continuing airworthiness records](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-continuing-airworthiness?erules-id=ERULES-1963177438-1031). Total life and time since scheduled maintenance/overhaul are separate; component removal limits are separate from aircraft C-check planning.
 
 ## Functional engineering workflows
-- Serialised component receipt increments stock and puts the serial in quarantine; Quality Inspector inspection is required before installation. Exhausted limits block approval and installation. Occupied aircraft positions block duplicate fitment. Removal returns the serial to quarantine, preserves counters, and increments stores stock.
+- Serialised component receipt creates a quarantined serial excluded from usable stock; Quality Inspector inspection is required before installation. Exhausted limits block approval and installation. Occupied aircraft positions block duplicate fitment. Removal returns the serial to quarantine, preserves counters, without adding usable stores stock.
 - Technical log tracks open defects and engineer rectification records. Grounded defects and scheduled checks contribute to aircraft technical holds.
 - Maintenance Outlook computes removal dates from adjustable planning rates (initial assumptions: 4 flight hours and 2 cycles/day), calendar limits and recorded remaining life; it drafts resource plans. Planned-flight assessments check the aircraft, active holds, open defects, and component limits. No dispatch approval is produced.
 - Export technical records downloads a JSON snapshot of the current fleet, component records, plans, movements, defects and audit history. Workflow data persists in localStorage on this browser; this is not a shared operational database.
@@ -47,3 +47,6 @@ The Assurance menu now includes Calibration, Life Inspection, and Laboratory & N
 Export record pack includes these records as JSON. Records persist in the current browser. Equipment limits, certificates and screening measurements are demo values; external laboratory testing and approved maintenance data remain required.
 
 Run `node tests/quality.cjs` and `node tests/technical.cjs` for domain verification. Research: [Lufthansa Technik laboratory services](https://www.lufthansa-technik.com/en/laboratory-services), [NIST traceability](https://www.nist.gov/calibrations/traceability), [EASA equipment guide](https://www.easa.europa.eu/en/downloads/137306/en), [FAA maintenance programmes](https://www.faa.gov/documentlibrary/media/advisory_circular/ac%20120-16f.pdf), and [ICAO electronic maintenance records](https://www.icao.int/operational-safety/normal-airworthiness).
+
+
+Connected department workflow: see [DEPARTMENT-WORKFLOW.md](DEPARTMENT-WORKFLOW.md). Stores intake now requires records verification and inspection, and new serials follow authorised work-package issue and fitment. Run node tests/chain.cjs for the connected handoff tests.
