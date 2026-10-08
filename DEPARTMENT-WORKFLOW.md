@@ -1,0 +1,15 @@
+# Connected engineering department demo
+
+Start with Stores Controller (m.faith / stores123), open Equipment Intake, register a part model, then receive the serial. The receipt holds supplier, GRN/order, release, approved limit source/revision, overhaul baseline and total-life evidence. It creates a quarantined component record; it does not create usable stock.
+
+The same serial follows technical records verification → incoming inspection → independent life review → planning → control authorisation → stores issue → assigned engineer fitment/task → independent task checks → certifying staff demo review → records archive. Every handoff retains its person, reference and notes. Select another department on the login screen to demonstrate the next responsibility.
+
+Eleven teams cover crew utilisation sources, procurement, stores, technical records, quality, planning, maintenance control, engineering, workshops, certifying staff and reliability. Supply & Repair returns repaired equipment to quarantine and records review. Documented overhaul resets only the applicable since-overhaul counters, preserving total life. Scrap segregation, consumable lots, controlled tools, calibration, NDT, mandatory instructions, deferral assessments and named shift handovers have separate evidence records.
+
+Remaining life is calculated from entered approved limits and actual recorded usage. On-condition components may have no fixed interval. Crew-source posting captures fitted serials, preserves separate hours/cycles/flights and blocks duplicate posting. Work packages support both replacement and inspection tasks. Tool/FOD, functional-test, identity and outstanding-item checks precede completion review.
+
+This uses a standard airline engineering role model, not a verified Air Zimbabwe organisation. Demo sign-offs are not a certificate of release to service or dispatch approval. Deferrals require manually entered operator sources; they do not override mandatory life limits. Records persist only in this browser; production needs authenticated shared storage, approved procedures, controlled documents and authority integration. Seed records are illustrative.
+
+Validation: technical.cjs, quality.cjs and chain.cjs cover role order, stock/quarantine, original-baseline preservation, life review staleness, fitment allocation, repair returns, total-life preservation, generic tasks, calibration gates, duplicate/atomic usage posting, mandatory-action holds, persistence and JSON export.
+
+Research: [FAA receiving inspection AC 20-154A](https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_20-154A.pdf), [EASA continuing airworthiness](https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-continuing-airworthiness?erules-id=ERULES-1963177438-272), [FAA MEL guidance AC 120-125](https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_120-125.pdf), and [Lufthansa Technik laboratory services](https://www.lufthansa-technik.com/en/laboratory-services). These informed receiving evidence, planning/handoffs, independent checking and the separation of operator deferrals from component limits.

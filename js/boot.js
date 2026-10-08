@@ -55,8 +55,8 @@ $("logoutBtn").addEventListener("click", () => {
   $("app").classList.add("hidden");
   $("loginScreen").classList.remove("hidden");
   $("content").innerHTML = "";
-  location.hash = "";
-  toast("info", "Signed out", "Session ended securely.");
+  history.replaceState(null,"",location.pathname+location.search);
+  toast("info", "Signed out", "Session ended.");
 });
 
 $("notifBtn").addEventListener("click", (e) => {
